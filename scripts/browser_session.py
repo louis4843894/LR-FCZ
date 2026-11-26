@@ -14,9 +14,12 @@ from websockets.sync.client import connect
 
 
 class Browser:
-    def __init__(self,label,protocol_timeout=60):
+    def __init__(self,label,protocol_timeout=60,extra_origins=()):
         if not 1<=protocol_timeout<=180:raise ValueError('browser protocol time bound')
         self.protocol_timeout=protocol_timeout
+        self.extra_origins=frozenset(extra_origins)
+        if self.extra_origins-{'https://lr-fcz.vercel.app'}:
+            raise ValueError('extra preview origin is outside the user-provided deployment')
         self.folder=ROOT/'data/research/runtime.private/browser-ui'/label
         self.folder.mkdir(parents=True,exist_ok=True)
         profile=self.folder/('profile-'+uuid.uuid4().hex[:10])
@@ -61,7 +64,8 @@ class Browser:
     def navigate(self,url,width=1440,ready=None):
         parsed=urllib.parse.urlparse(url)
         if not ((parsed.hostname in ('127.0.0.1','localhost') and parsed.scheme=='http' and parsed.port==3101)
-                or (parsed.hostname=='rangerbook.warmycat.com' and parsed.scheme=='https')):
+                or (parsed.hostname=='rangerbook.warmycat.com' and parsed.scheme=='https')
+                or (f'{parsed.scheme}://{parsed.netloc}' in self.extra_origins)):
             raise ValueError('UI probe origin is outside the requested scope')
         self.call('Emulation.setDeviceMetricsOverride',{'width':width,'height':960,'deviceScaleFactor':1,'mobile':width<700})
         navigation=self.call('Page.navigate',{'url':url});loader=navigation.get('loaderId')

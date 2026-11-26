@@ -9,7 +9,8 @@
 - 重建：先讓既有development預覽在127.0.0.1:3101，再跑 `python scripts/export_site_display.py`、`python scripts/validate_site_display.py`。中斷可用 `--resume data/research/runtime.private/site-display-<時間>` 續接相同輸入；新來源應開新匯出。有效資料全部檢查後才更新輸出，失敗不先清空；原始副本／7GB DB／Supabase私有草稿均未修改。完整說明 `docs/site-display.md`。
 - **驗證通過**：受影響TS6檔22測試、型別／lint／production build；圖鑑互動12案例與production桌面／手機16案例，無JS例外。正式預覽故意指定不存在的LR_LOCAL_DATABASE_PATH仍正常；本機匯出／圖片端點404，更新端點403。19份部署追蹤涵蓋1,200／1,200顯示檔，私人檔案0。報告 `catalog-tools-ui-validation.json`、`site-display-validation.json`、`site-display-production-ui.json`、`site-display-build-trace.json`、`site-display-build.log`。
 - 依賴／lock未變；沒有Ghidra、遊戲請求、裝置操作、憑證讀取或手動部署。建置 `.next-local-site-display-build`、2 workers／1536MB；3101正式驗證結束後回復原本development預覽，使用者3000與雷電不動。Git檢查會解壓顯示模型再掃描，避免壓縮隱藏私人值。
-- **仍未完成**：其餘98公會任意防禦入口、部分對手4座鎖定塔、20角色名稱／118未收錄詳情、本機完整技能解析與戰鬥觸發；PVP原403後暫停仍保留。正式網站採已驗證顯示版本，資料採集仍在本機；新資料需匯出／驗證／推送，沒有新增雲端遊戲自動更新。Vercel實際線上網址未提供，不能把本機production通過當作已驗證線上部署。
+- 修正已推main **bade3c8**；使用者提供 [lr-fcz.vercel.app](https://lr-fcz.vercel.app/) 後，匿名核對GitHub的Vercel狀態由pending轉success，公開角色頁由「尚未開放」切換為圖鑑。**公開網站另16個桌面／手機案例全部通過**，角色詳情／前搖、裝備、公會100名單／十塔及PVP深層防禦連結／可見圖片皆正常，JS例外0、本機端點維持拒絕。`reports/site-display-deployed-ui.json`；重現 `python scripts/verify_site_display_ui.py --origin https://lr-fcz.vercel.app`。沒有使用登入憑證或操作Vercel部署工具，為既有Git自動部署。
+- **仍未完成**：其餘98公會任意防禦入口、部分對手4座鎖定塔、20角色名稱／118未收錄詳情、本機完整技能解析與戰鬥觸發；PVP原403後暫停仍保留。正式網站採已驗證顯示版本，資料採集仍在本機；新資料需匯出／驗證／推送，沒有新增雲端遊戲自動更新。
 
 ## 最新：整體公會儲存盤點與 GitHub main（11/27）
 

@@ -35,6 +35,8 @@ npm.cmd run build
 npm.cmd run start -- --hostname 127.0.0.1 --port 3101
 # 僅在上述 production 預覽啟動後執行
 python scripts/verify_site_display_ui.py
+# 核對使用者指定的公開部署，不需要登入憑證
+python scripts/verify_site_display_ui.py --origin https://lr-fcz.vercel.app
 ```
 
 不要同時讓 development 與 production 使用同一個 port 或 distDir。可沿用 `LR_NEXT_DIST_DIR` 在本機分離建置產物；此變數不需要設定到 Vercel。
