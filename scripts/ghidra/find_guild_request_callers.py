@@ -4,6 +4,7 @@ This checks BL/B encodings in .text, including callers not disassembled in the
 targeted Ghidra project. ELF unwind bounds identify candidates for decompilation.
 No process access, requests, project writes or auto-analysis.
 """
+import argparse
 import json
 import struct
 import sys
@@ -28,7 +29,10 @@ TARGETS = {
 }
 
 
-def find():
+def find(targets=None, report_name='guildwar-reader-callers.json'):
+    if Path(report_name).name != report_name or not report_name.endswith('.json'):
+        raise ValueError('report must be a JSON filename within reports')
+    selected = TARGETS if targets is None else targets
     elf = NativeELF(ROOT / 'data/research/runtime.private/modules/libgame-12.4.2-pull.so')
     if elf.sha256 != SHA or struct.unpack_from('<H', elf.data, 18)[0] != 183:
         raise ValueError('verified ARM64 module required')
@@ -49,19 +53,22 @@ def find():
             immediate -= 0x4000000
         pc = section[3] + elf.image_base + index * 4
         target = pc + immediate * 4
-        if target not in TARGETS:
+        if target not in selected:
             continue
         calls.append({'instruction': hex(pc), 'functionStart': hex(elf.function_start(pc)),
-                      'target': hex(target), 'purpose': TARGETS[target],
+                      'target': hex(target), 'purpose': selected[target],
                       'encoding': 'BL' if word & 0x80000000 else 'B'})
     report = {'moduleSha256': SHA, 'bytesOfCodeChecked': len(code),
               'method': 'Exact ARM64 BL/B in .text; ELF unwind function boundaries',
-              'targets': {hex(k): v for k, v in TARGETS.items()}, 'references': calls,
+              'targets': {hex(k): v for k, v in selected.items()}, 'references': calls,
               'networkRequests': 0, 'indirectCallsExcluded': True}
-    (ROOT / 'reports/guildwar-reader-callers.json').write_text(
+    (ROOT / 'reports' / report_name).write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf8')
     return report
 
 
 if __name__ == '__main__':
-    print(json.dumps(find(), ensure_ascii=False))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--battle-entry', action='store_true', help='Only inspect entry/callback code references, never invoke a battle request')
+    args = parser.parse_args()
+    print(json.dumps(find({0x0133d0f8: 'guild-war battle enter POST (not executed)', 0x0133d30c: 'guild-war battle enter response callback'}, 'guildwar-battle-entry-callers.json') if args.battle_entry else find(), ensure_ascii=False))
