@@ -1,5 +1,18 @@
 # LR 目前可續接狀態（2026-11-27）
 
+## 最新：整體公會儲存盤點與 GitHub main（11/27）
+
+- 使用者要求擴大檢查整個公會資料流程，前百防禦仍為目標。新增索引涵蓋 **211個Guild RTTI類別、77個完整公會相關路徑字串及85處原生引用**；這是索引範圍，不等於已反編譯所有211類別或驗證77個API。腳本 `scripts/ghidra/inventory_guild_storage.py`、`index_guild_request_routes.py` 均只讀既有模組，沒有auto-analysis、全程序掃描或新增遊戲請求。
+- 實機核對 `GuildWarDataManager`：+18/+20為己方／對手Info，+28為Season，+50為5筆ReplayModel；+78/+80各10個整數key的CCArray，僅含每塔2／3／4個CCInteger。已由 `0133af3c → 0133fd94` 確認它們來自 `fortressCount`／`enemyFortressCount`，並非跨公會隊伍快取。`guild-runtime-storage-caches.json`；只讀8,748 bytes／81物件，未保存記憶體傾印。
+- 另定位 `GuildDBContainer` global01fd7588／AP01e4b938。11個持有欄位皆已觀察型別，每個容器僅抽3個值；+30已由 `GuildRaidAiDB(01e4bc10) → 00f46f08 → virtual68/00f4a598` 連到guild_raid_stage_ai；+40由 `GuildWarFortressDB(01e4bf30) → 00f48ed0 → virtual88/00f4a638` 連到guild_war_fortress。另見簽到、徽章、出怪、172守護神模板、buff及戰場機制。戰鬥管理器global01fd6fe8目前為null。證據 `guild-template-storage-root-check.json`、`guild-battle-storage-root-check.json`、`ghidra/guild-db-storage-writer-proof-1242.txt`。
+- 保存檔盤點限已知遊戲files/cache：淺層125檔、databases檔名9個，未讀資料列；已開啟檔案40個，.ldb在WebView儲存目錄，未讀內容。唯一Volley快取驗證格式後來源不是遊戲API，沒有讀回應標頭或body。找到2個.eson：448bytes副本與APK內建SHA完全相同；另7424bytes副本格式未驗證，尚無公會關聯，不把它宣稱可讀。副本與檔名細目留runtime.private；安全摘要見 `guild-existing-eson-format-check.json`、`guild-local-http-cache-check.json`。
+- 公會列表／搜尋皆轉成GuildInfoModel；排名模型 `012a2814` 讀12個識別／排名／公會基本欄位，沒有角色或裝備。另確認 `/guild/confirm/${GID}` 是POST，但POST本身不足以判定用途；回應只向delegate傳狀態數字，沒有解析防禦。正常UI兩個尾端caller（01273f5c／012756fc）已讀；同一handler另呼叫 `/guild/${GID}/admission` 與 `/guild/admission/cancel/${GID}`，屬於入會／申請相關流程，沒有塔號或防禦回應，**未呼叫此POST**。不能用改名、猜參數或重試403補足前百。
+- 外部公開Legend檔完整schema檢查已補完：50公會、2,417成員觀察、44,194個帶角色代碼物件，未見defense／fortress／tower／deck／groupType欄位。`guildwar`實際是numeric-key dictionary，不是假設的array；對照公開UI仍標進攻編隊，匯入防禦0。純統計見 `public-guildwar-reference-complete-schema.json`，沒有原始玩家資料；曾修正Counter把欄位值作計數的暫存輸出錯誤，已移除值，且reports從未提交Git。空group的精確數量未保留，不能由key總數推算成空隊伍。
+- 整體盤點整理為 `reports/guild-all-storage-review.json`，目前定向反編譯30個不同函式，保留每份證據SHA與範圍。**真正防禦的已確認表示是伺服器回應 `guildWarDefenceDeckResponses[*].deckInfoJson`／deckId，原生模型為GuildWarMemberModel；尚未知道伺服器實際資料表名稱，也未建立任意前百GID讀取。** 前百仍完整1／部分1／未取得98；沒有新增公會防禦配置，不將30函式／211類別索引說成已解決全前百。
+- 為補齊字串內嵌JSON的檢查缺口，針對已接受排名第一公會的正常profile／roster另做2個GET；完整走訪所有物件／陣列／可解析JSON字串，內嵌JSON 0、防禦候選0，沒有保存回應或讀玩家編隊。`guild-normal-embedded-schema-check.json`；新CLI `probe_guild_embedded_fields.py` 保持拒絕即停，Cookie僅RAM。一般圖鑑／詞條／資料庫未變更，沒有重跑未受影響的Next檢查。
+- 受影響檢查：公開schema保留值／內嵌JSON／識別鍵／深度上限／憑證形狀等5項合成測試通過；6個新分析腳本編譯及實際離線索引／摘要執行通過。延用既有18項TS、9項Python、型別／lint／build及18個桌面／手機UI驗證；它們未受本段純研究／Git變更影響，不再重跑。沒有新增自動輪詢、遊戲寫入或部署。
+- **GitHub已開始版本控管並推至使用者指定的 [LR-FCZ/main](https://github.com/louis4843894/LR-FCZ/tree/main)**，初始提交 `81597ab`。遠端原為空，沒有force push；342個檔案／約5.3MB staged blob檢查未發現憑證值，環境範本金鑰欄位全空。排除研究副本、reports、本機資料庫、原始遊戲檔、帳號資料與完整記憶體；保留本機全部資料。README已反映角色／公會實際狀態，沒有部署或改依賴。
+
 ## 進行中：前100公會防禦入口、明確沒有與未知的校對（11/27）
 
 - **使用者最新要求持續挖前100公會防禦，不能只抓自己的對手。尚未完成；目前前100為完整1、部分1、未取得98。** 已進入454期second_battle，不再等待23:00。`reports/guild-top100-defense-coverage.json` 逐公會保存真實狀態；不把公開進攻隊伍當防禦，不清除先前玩家編隊GET的403暫停。
@@ -23,6 +36,7 @@ python scripts/verify_availability_opponent_ui.py
 # 下列均離線，不重試已排除或已拒絕的遊戲請求
 python scripts/ghidra/find_guild_request_callers.py
 python scripts/audit_guild_defense_entrypoints.py
+python scripts/audit_guild_storage.py
 ```
 
 ## 最新：參考布局、全站深色樣式與可收合內容（11/26）

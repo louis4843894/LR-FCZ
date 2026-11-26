@@ -51,12 +51,13 @@ def check():
         if size > 12*1024*1024 or total > 64*1024*1024:
             findings.append({'path': path, 'rule': 'publication-size-bound'})
         name = Path(path).name
-        forbidden = (path.startswith(('data/raw/', 'data/extracted/', 'data/research/', 'data/inventory/',
+        placeholder = name == '.gitkeep' and not blob
+        forbidden = ((not placeholder and path.startswith(('data/raw/', 'data/extracted/', 'data/research/', 'data/inventory/',
                                      'data/local/', 'reports/', 'node_modules/', '.next'))
                      or name.startswith('.env') and name != '.env.example'
                      or any(tag in name for tag in ('.private.', '.personal.', '.secret.', '.credentials.', '.account.'))
                      or Path(path).suffix.lower() in ('.apk', '.apks', '.so', '.dex', '.bin', '.sqlite', '.db', '.ndb')
-                     or mode not in ('100644', '100755'))
+                     or mode not in ('100644', '100755')))
         if forbidden:
             findings.append({'path': path, 'rule': 'excluded-local-input'})
         for label, pattern in PATTERNS.items():

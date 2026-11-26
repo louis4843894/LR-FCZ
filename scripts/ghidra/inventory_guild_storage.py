@@ -60,6 +60,6 @@ def inventory():
 if __name__ == '__main__':
     report = inventory()
     candidates = [r for r in report['classes']
-                  if re.search(r'Manager|Model|Data|Loader|Container|History', r['rttiName'])]
+                  if re.search(r'Manager|Model|Data|Loader|Container|History|DB', r['rttiName'])]
     print(json.dumps({'classes': len(report['classes']), 'storageCandidates': [
         {k: v for k, v in c.items() if k != 'virtualSlots'} for c in candidates]}))

@@ -24,6 +24,7 @@ TARGETS = {
     0x0133adc0: 'guild war main GET',
     0x0134859c: 'GuildWarMemberModel constructor (tower defender)',
     0x013486b4: 'GuildWarMemberModel parser (tower defender)',
+    0x01255908: 'guild confirm POST; not established as a defense reader',
 }
 
 

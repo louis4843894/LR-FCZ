@@ -16,6 +16,7 @@ from native_elf import NativeELF
 
 SHA = '1185e119efeb6a67d30d289f8a183b36aebe53126a4765698509cd7a822a42a0'
 HTTP = {0x0105a004: 'GET wrapper', 0x01058b84: 'POST wrapper',
+        0x01058198: 'POST wrapper with prepared headers/body',
         0x01a4be64: 'common dispatcher; method requires data-flow proof'}
 
 

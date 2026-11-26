@@ -47,6 +47,10 @@ personal-data/
 /data/research/
 /data/inventory/
 /data/normalized/**/runs/
+/data/normalized/*
+!/data/normalized/verified-characters.json
+!/data/normalized/verified-equipment.json
+!/data/normalized/.gitkeep
 .pytest_cache/
 
 # Local research evidence may contain player identifiers and capture metadata.
