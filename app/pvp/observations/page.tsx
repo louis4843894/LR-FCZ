@@ -16,11 +16,11 @@ export default async function PvpObservationsPage({searchParams}:{searchParams:P
   return (
     <ModuleStatusPage
       eyebrow="PvP"
-      title="尚無可驗證的排行榜資料"
-      description="排行榜、玩家防守隊伍與配裝分析目前尚未串接。"
-      evidence="目前沒有取得任何真實 PvP 排行、段位或玩家防守隊伍記錄。"
-      missing="已授權且可重現的排行榜來源、有效樣本、玩家隊伍快照、角色與裝備配對，以及取得失敗紀錄。"
-      nextStep="取得資料後會標示排名玩家範圍與取樣時間；使用率以有效樣本玩家為分母，勝率則需要戰鬥結果資料。"
+      title="非排名歷史觀察未公開"
+      description="此頁保留給本機歷史資料；排行榜與已公開的玩家防禦請由 PVP 排行進入。"
+      evidence="沒有將個人歷史觀察與原始快照放入公開網站。"
+      missing="這不影響目前已取得的排名樣本與防禦展示。"
+      nextStep="前往 PVP 排行選擇段位，再點選已取得的玩家防禦；統計僅使用對應排名樣本。"
     />
   );
 }

@@ -20,7 +20,7 @@ type Team = { snapshotId: string; playerId: string; teamId: string | null; purpo
   members: null | { memberIndex: number; characterState: string; characterId: string | null;
     characterInstanceIdentity: { value:string;sourceField:string;namespace:string } | null;
     equipment: Record<Slot,{state:string;equipmentId:string|null;enhancement:number|null;instanceGrade?:number|null;equipmentInstanceIdentity?:{value:string;sourceField:string;namespace:string}|null;attributeReadState?:string;actualEffects:EffectIdentifiers|null}> }[] };
-export async function getDefenseTeams(purpose: "pvp_defense" | "guild_battle_defense", ownerPlayerId?:string,filter?:{snapshotIds?:ReadonlySet<string>;excludeRanked?:boolean}) {
+export async function getDefenseTeams(purpose: "pvp_defense" | "guild_battle_defense", ownerPlayerId?:string,filter?:{snapshotIds?:ReadonlySet<string>;excludeRanked?:boolean;keepSnapshots?:boolean}) {
   if (process.env.NODE_ENV !== "development") return null;
   let teams: Team[];
   try {
@@ -35,7 +35,7 @@ export async function getDefenseTeams(purpose: "pvp_defense" | "guild_battle_def
   if (!teams.length) return null;
   const latest = new Map<string,Team>();
   for (const team of teams) {
-    const key = JSON.stringify([team.guildId,team.playerId,team.teamId]);
+    const key = JSON.stringify([team.guildId,team.playerId,team.teamId,...(filter?.keepSnapshots?[team.snapshotId]:[])]);
     const previous = latest.get(key);
     if (!previous || Date.parse(team.retrievedAt)>Date.parse(previous.retrievedAt)) latest.set(key,team);
   }

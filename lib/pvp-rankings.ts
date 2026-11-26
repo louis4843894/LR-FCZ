@@ -1,4 +1,5 @@
 import "server-only";
+import {readSiteDisplay} from './site-display-data';
 import {createHash} from "node:crypto";
 import {readRankingStore,readNormalizedText,readLatestPvpUpdate,readNativeGearRolls} from "./local-game-data";
 import {getDefenseTeams} from "./defense-teams";
@@ -89,7 +90,16 @@ async function context(snapshotId?:string,scope?:string){
     availableRankingPlayers:new Set(current.flatMap(c=>documents.find(d=>d.snapshotId===c.snapshotId)?.players.map(p=>p.playerId)??[])).size};
 }
 
-export async function getPvpRankings(scope?:string,top=100){
+export async function getPvpRankings(scope?:string,top=100):Promise<Awaited<ReturnType<typeof getLocalPvpRankings>>>{
+  if(process.env.NODE_ENV!=='production')return getLocalPvpRankings(scope,top);
+  const scopes=await readSiteDisplay<string[]>('pvp-index');
+  const label=scope?canonicalPvpScope(scope):scopes?.includes('傳奇')?'傳奇':scopes?.[0];
+  if(!label||!scopes?.includes(label))return null;
+  const size=[10,30,50,100,200,1000].includes(top)?top:100;
+  const variants=await readSiteDisplay<Record<string,Awaited<ReturnType<typeof getLocalPvpRankings>>>>(`pvp-${createHash('sha256').update(label).digest('hex').slice(0,12)}`);
+  return variants?.[String(size)]??null;
+}
+async function getLocalPvpRankings(scope?:string,top=100){
   const source=await context(undefined,scope);if(!source)return null;
   const {document,attempts,successes,teams}=source;
   const limit=Number.isSafeInteger(top)&&top>0?Math.min(top,1000):100;

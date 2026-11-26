@@ -18,7 +18,7 @@ export default async function DataStatusPage(){
         <li>真實排行榜已取得 {data.rankingPlayers} 位玩家；傳奇榜有效防禦樣本 {data.rankingSamples} 位、{data.rankingTeams} 隊、{data.rankingEquipment} 件裝備，模板關聯 {data.rankingEquipmentMatched}／{data.rankingEquipment}。排名目前版本的效果 ID／階級共 {data.rankingAttributeEntries} 筆，已還原數值 {data.rankingAttributeValues} 筆、未知 {data.rankingAttributeUnknown} 筆。舊原生數值版本仍另行保留。傳奇榜未讀取 {data.rankingNotRead} 位、失敗 {data.rankingFailures} 位。只計算樣本內比例，不計算勝率。公會成員及其他可見玩家不能充作排名樣本。</li>
         <li>全遊戲裝備／角色完整性、本機 .db 解密與可脫離遊戲載入狀態的更新來源尚未確認。</li>
       </ul>{data.unknownEquipmentIds.length>0&&<p>尚未關聯的裝備模板：{data.unknownEquipmentIds.join("、")}</p>}</section>
-      <section className="reference-panel"><h2>更新規則</h2><p>公會每週二 12:00（台灣時間）排程嘗試更新名單。PVP 使用遊戲已確認的正常請求直接更新排行與防禦，不需逐頁切換；名單快取 60 秒，防禦快取預設 5 分鐘，可強制更新。仍需有效的本機遊戲工作階段；拒絕存取即停止，失敗保留有效舊版本。原始副本與內部玩家識別不提供前端。</p><PvpAutoUpdateStatus/><p>目前僅本機驗證，尚未部署。模板範圍與玩家實際數值分開標示。</p></section>
+      <section className="reference-panel"><h2>更新規則</h2><p>公會每週二 12:00（台灣時間）排程嘗試更新名單。PVP 使用遊戲已確認的正常請求直接更新排行與防禦，不需逐頁切換；名單快取 60 秒，防禦快取預設 5 分鐘，可強制更新。仍需有效的本機遊戲工作階段；拒絕存取即停止，失敗保留有效舊版本。原始副本與內部玩家識別不提供前端。</p><PvpAutoUpdateStatus/><p>{process.env.NODE_ENV==='production'?'此頁顯示已發布資料版本；擷取與驗證在本機執行。':'目前使用本機有效資料。'}模板範圍與玩家實際數值分開標示。</p></section>
     </>}
   </main><SiteFooter/></div>;
 }

@@ -1,4 +1,5 @@
 import "server-only";
+import {readSiteDisplay} from './site-display-data';
 import { getEquipmentReferenceMap, type ReferenceEquipment } from "./equipment-reference";
 import { referenceFilterOptions } from "./reference-filters";
 
@@ -23,6 +24,7 @@ export type VerifiedEquipment = {
 };
 
 export async function getVerifiedEquipmentList(): Promise<VerifiedEquipment[]> {
+  if(process.env.NODE_ENV==='production')return await readSiteDisplay<VerifiedEquipment[]>('equipment')??[];
   let text: string;
   try {
     text = await readNormalizedText("verified-equipment.json");

@@ -1,4 +1,5 @@
 import "server-only";
+import {readSiteDisplay} from './site-display-data';
 import { readNormalizedText,readCollectionTarget,readRankedSnapshotKeys } from "./local-game-data";
 import { getCharacterReference } from "./character-reference";
 import { getPvpRankings } from "./pvp-rankings";
@@ -28,7 +29,10 @@ export function summarizeDefense(snapshots:Snapshot[], rosterIds:Set<string>, te
     latestDefenseAt:pvp.map(t=>t.retrievedAt).sort((a,b)=>Date.parse(b)-Date.parse(a))[0] ?? null};
 }
 
-export async function getAcquisitionProgress(){
+export async function getAcquisitionProgress():Promise<Awaited<ReturnType<typeof getLocalAcquisitionProgress>>>{
+  return process.env.NODE_ENV==='production'?readSiteDisplay('status'):getLocalAcquisitionProgress();
+}
+async function getLocalAcquisitionProgress(){
   if(process.env.NODE_ENV!=="development")return null;
   const [rosterText,defenseText,equipmentText,characters,rankedKeys,rankings,rankedGuilds]=await Promise.all([
     readNormalizedText("guild-roster.private.json"),readNormalizedText("defense-teams.private.json"),readNormalizedText("verified-equipment.json"),getCharacterReference(),readRankedSnapshotKeys(),getPvpRankings('傳奇',200),getGuildRankings(),

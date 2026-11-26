@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "../styles.css";
 import "../styles/dark-catalog.css";
+import "../styles/catalog-tools.css";
 
 export const metadata: Metadata = {
   title: "Ranger Atlas｜LINE Rangers 資料站",

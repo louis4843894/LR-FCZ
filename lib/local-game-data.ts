@@ -8,7 +8,7 @@ const filenames = new Set([
   "guild-roster.private.json", "defense-teams.private.json",
 ]);
 
-async function localDatabase() {
+export async function localDatabase() {
   const configured=process.env.LR_LOCAL_DATABASE_PATH;
   if(!configured || process.env.NODE_ENV!=="development")return null;
   const root=path.resolve(process.cwd(),"data/local");const databasePath=path.resolve(process.cwd(),configured);

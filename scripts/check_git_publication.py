@@ -4,6 +4,7 @@ Reads staged blobs locally. Prints only rule names/locations, never matched
 values. No login, remote request, unstaged secret read, or file modification.
 """
 import hashlib
+import gzip
 import json
 import re
 import subprocess
@@ -60,9 +61,22 @@ def check():
                      or mode not in ('100644', '100755')))
         if forbidden:
             findings.append({'path': path, 'rule': 'excluded-local-input'})
+        scanned = blob
+        if path.startswith('data/site-display/') and path.endswith('.json.gz'):
+            from export_site_display import assert_safe
+            try:
+                scanned = gzip.decompress(blob)
+                if len(scanned) > 80*1024*1024:
+                    raise ValueError('display output bound')
+                document = json.loads(scanned)
+                if document['schemaVersion'] != 1 or document['kind'] != 'lr-site-display':
+                    raise ValueError('display schema')
+                assert_safe(document)
+            except Exception:
+                findings.append({'path': path, 'rule': 'invalid-display-artifact'})
         for label, pattern in PATTERNS.items():
-            for match in pattern.finditer(blob):
-                findings.append({'path': path, 'rule': label, 'line': blob.count(b'\n', 0, match.start())+1})
+            for match in pattern.finditer(scanned):
+                findings.append({'path': path, 'rule': label, 'line': scanned.count(b'\n', 0, match.start())+1})
     return {'stagedFiles': len(entries), 'stagedBytes': total,
             'indexManifestSha256': hashlib.sha256(json.dumps(entries).encode()).hexdigest(),
             'passed': not findings, 'findings': findings, 'networkRequests': 0}

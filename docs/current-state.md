@@ -1,5 +1,16 @@
 # LR 目前可續接狀態（2026-11-27）
 
+## 最新：圖鑑操作優化與 Vercel 顯示資料（11/27）
+
+- 本輪依參考網站公開的搜尋／進階篩選方式完善既有介面：首頁可切換角色／裝備／公會快速查詢；角色／裝備圖鑑新增可逐項移除的篩選標籤、結果範圍、數字分頁與直接跳頁，保留重複效果參數及 AND／OR。裝備多選改成可搜尋勾選清單，隱藏選項仍保留勾選；角色排序新增星等／中文名稱。長涵蓋說明收合、空結果可重設。手機選單支援 Escape／外部點擊關閉與鍵盤焦點返回，詳細頁有父層導覽。原防禦收合版型與資料判定保留。
+- 使用者接著要求解決 Vercel 看不到。原因是角色、詳情、PVP／公會讀取依賴未提交的 SQLite／研究檔及 development 限制，圖片 API 又限定本機。現在 production 改讀 **`data/site-display/*.json.gz` 的顯示模型**，圖片改走 **`public/site-assets/`**；不把 NODE_ENV 設成 development、不上傳 SQLite、不開放擷取 API。新增顯示資料 reader／隱私檢查及本機專用只讀匯出路由，原研究流程不變。
+- 已產生 **1,200 個壓縮模型、2,405 角色、953 裝備、100 公會／4,751 成員、1,083 個目前排名防禦頁、3,292 張 PNG（2,405 角色＋887 裝備）**，共35,076,401 bytes（約35 MB）。manifest 記錄來源類別、各檔／圖片SHA；參考技能／模板效果仍保留user-confirmed-reference類別，不改稱本機原生解析。未取得圖片仍用替代圖。
+- 公會部署顯示驗證 **740角色／2,219裝備＋1確認空位，2,219件均有實際強化，740筆培養關聯齊**；完整1公會／部分1／未取得98維持原判定。**沒有新增公會或重新抓取遊戲**。原始玩家／公會識別、角色／裝備實例ID、原始階級、私有路徑與個人未確認部署儲存設定不進入公開模型；別名／時間／槽位及已確認中文實際效果保留。
+- 重建：先讓既有development預覽在127.0.0.1:3101，再跑 `python scripts/export_site_display.py`、`python scripts/validate_site_display.py`。中斷可用 `--resume data/research/runtime.private/site-display-<時間>` 續接相同輸入；新來源應開新匯出。有效資料全部檢查後才更新輸出，失敗不先清空；原始副本／7GB DB／Supabase私有草稿均未修改。完整說明 `docs/site-display.md`。
+- **驗證通過**：受影響TS6檔22測試、型別／lint／production build；圖鑑互動12案例與production桌面／手機16案例，無JS例外。正式預覽故意指定不存在的LR_LOCAL_DATABASE_PATH仍正常；本機匯出／圖片端點404，更新端點403。19份部署追蹤涵蓋1,200／1,200顯示檔，私人檔案0。報告 `catalog-tools-ui-validation.json`、`site-display-validation.json`、`site-display-production-ui.json`、`site-display-build-trace.json`、`site-display-build.log`。
+- 依賴／lock未變；沒有Ghidra、遊戲請求、裝置操作、憑證讀取或手動部署。建置 `.next-local-site-display-build`、2 workers／1536MB；3101正式驗證結束後回復原本development預覽，使用者3000與雷電不動。Git檢查會解壓顯示模型再掃描，避免壓縮隱藏私人值。
+- **仍未完成**：其餘98公會任意防禦入口、部分對手4座鎖定塔、20角色名稱／118未收錄詳情、本機完整技能解析與戰鬥觸發；PVP原403後暫停仍保留。正式網站採已驗證顯示版本，資料採集仍在本機；新資料需匯出／驗證／推送，沒有新增雲端遊戲自動更新。Vercel實際線上網址未提供，不能把本機production通過當作已驗證線上部署。
+
 ## 最新：整體公會儲存盤點與 GitHub main（11/27）
 
 - 使用者要求擴大檢查整個公會資料流程，前百防禦仍為目標。新增索引涵蓋 **211個Guild RTTI類別、77個完整公會相關路徑字串及85處原生引用**；這是索引範圍，不等於已反編譯所有211類別或驗證77個API。腳本 `scripts/ghidra/inventory_guild_storage.py`、`index_guild_request_routes.py` 均只讀既有模組，沒有auto-analysis、全程序掃描或新增遊戲請求。

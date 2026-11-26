@@ -2,6 +2,7 @@ import "server-only";
 
 import { access } from "node:fs/promises";
 import path from "node:path";
+import {readSiteDisplay} from './site-display-data';
 
 const SNAPSHOT_ID = "lr_20261116T212608096_7b99bdd0";
 const GEAR_ICON_DIRECTORY = path.join(
@@ -30,10 +31,10 @@ export function isGearIconAssetId(assetId: string): boolean {
 export async function getLocalGearIconUrl(
   dataCode: string,
 ): Promise<string | null> {
-  if (process.env.NODE_ENV !== "development") return null;
-
   const assetId = getGearIconAssetId(dataCode);
   if (!assetId) return null;
+  if(process.env.NODE_ENV==='production')return (await readSiteDisplay<Record<string,string>>('gear-icons'))?.[assetId]??null;
+  if (process.env.NODE_ENV !== "development") return null;
 
   try {
     await access(path.join(GEAR_ICON_DIRECTORY, `${assetId}_icon.png`));

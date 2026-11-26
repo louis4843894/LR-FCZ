@@ -1,4 +1,5 @@
 import "server-only";
+import {readSiteDisplay} from './site-display-data';
 import {readCharacterTemplateDocument,readCharacterDetailStore,readCharacterNativeStore} from "./local-game-data";
 import {publicNativeTalents,type NativeCharacterTalents} from './character-native';
 import { displaySourceText } from "./display-text";
@@ -18,6 +19,7 @@ export type CharacterReference = {
 };
 // External reference copies remain research-only; this reader uses local native fields.
 export async function getCharacterReference(): Promise<{ retrievedAt: string; detailsRetrievedAt:string|null;nativeSha:string;gameVersion:string|null;loadedContainerTraversalEnded:boolean;coverage:{names:number;stars:number;images:number;primarySkills:number;primaryAbilities:number;skillDetails:number;abilityDetails:number;awakeningDetails:number;talentDetails:number;matchedDetails:number;notInReference:number;skillsAbsent:number|null;abilitiesAbsent:number|null;awakeningAbsent:number|null;talentsAbsent:number|null}; records: CharacterReference[] } | null> {
+  if (process.env.NODE_ENV === "production") return readSiteDisplay('characters');
   if (process.env.NODE_ENV !== "development") return null;
   try {
     const document=await readCharacterTemplateDocument();const nativeSha=document.documentSha??createHash('sha256').update(document.text).digest('hex');const data = JSON.parse(document.text);
@@ -41,6 +43,7 @@ export async function getCharacterReference(): Promise<{ retrievedAt: string; de
 }
 export async function getCharacterDetail(characterId:string):Promise<{row:CharacterReference;details:CharacterDetails|null;detailStatus:string;nativeTalents:NativeCharacterTalents|null;retrievedAt:string;detailsRetrievedAt:string|null}|null>{
  if(!/^[A-Za-z0-9_-]+$/.test(characterId))return null;
+ if(process.env.NODE_ENV==='production')return (await readSiteDisplay<Record<string,NonNullable<Awaited<ReturnType<typeof getCharacterDetail>>>>>('character-details'))?.[characterId]??null;
  const source=await getCharacterReference();const row=source?.records.find(r=>r.characterId===characterId);if(!source||!row)return null;
  const [store,native]=await Promise.all([readCharacterDetailStore(source.nativeSha,characterId),readCharacterNativeStore(source.nativeSha,[characterId])]);
  return {row,details:publicCharacterDetails(store?.detail,characterId),detailStatus:store?.index.get(characterId)?.status??'not_acquired',nativeTalents:publicNativeTalents(native?.details.get(characterId),characterId),retrievedAt:source.retrievedAt,detailsRetrievedAt:store?.retrievedAt??null};

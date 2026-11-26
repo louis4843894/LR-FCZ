@@ -44,7 +44,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
 
 值使用自己的 Supabase 專案 URL 與 Publishable key。`SUPABASE_URL` 僅是同專案網址的可選 server override；`SUPABASE_SECRET_KEY`、`LR_LOCAL_DATABASE_PATH`、`LR_NEXT_DIST_DIR` 不需填入 Vercel，`NODE_ENV` 由平台管理。環境變數變更只影響後續部署，見 [Vercel 官方說明](https://vercel.com/docs/environment-variables/managing-environment-variables)。
 
-**目前正式環境尚未接齊資料**：角色、PVP、公會、裝備效果研究對照及私有圖片讀取仍有 development／loopback 限制；Supabase 研究快照目前為私有草稿。填入上述兩項只設定既有公開查詢連線，不會自動讓本機資料在 Vercel 顯示。正式發布需要另外完成可公開資料的白名單讀取與素材串接，不能靠把 `NODE_ENV` 設成 development 取代。
+**正式圖鑑與防禦改讀顯示資料包**：`data/site-display/` 提供角色、裝備效果、公會名單／已取得防禦及目前接受的 PVP 排名／防禦；圖片來自 `public/site-assets/`。它們隨 Git 建置，不需要本機 SQLite 或 development／loopback 端點，也不需要新增 secret key。上述兩項環境變數保留給原本的公開翻譯查詢。重建及驗證方式見 [正式網站顯示資料](docs/site-display.md)。Supabase 研究草稿維持私有，沒有把完整研究副本公開。
 
 ## 目前功能
 
@@ -53,9 +53,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
 - `/guild`：前 100 名公會與已取得名單；十塔防禦區分完整、部分與未取得，塔號顯示 1～10。
 - PVP／公會共用可收合的隊伍檢視器：角色位置、實際等級、雷納德點數、覺醒／才能與各部位裝備；中文實際詞條與模板範圍分開。
 - `/translations`、`/data-status`：已發布翻譯及真實資料覆蓋狀態。缺少私有副本時顯示缺口，不提供示範排名、假隊伍或假使用率。
-- 本機角色圖片已有已驗證的模板映射；圖片留在私有素材目錄，缺圖使用替代顯示，不熱連結別站。
+- 角色圖片已有已驗證的模板映射；正式版只複製顯示需要且通過 PNG／雜湊驗證的圖片，原始素材與研究副本保留本機。缺圖使用替代顯示，不熱連結別站。
 
-本機私有資料目前含一個完整公會防禦與一個部分對手防禦；**前 100 公會的批次防禦取得尚未完成**。公開玩家回應中的 `guildwar` 已確認是進攻編隊，不能匯入為十塔防禦。細節以 current-state 為準，這些玩家資料不包含在倉庫內。
+目前含一個完整公會防禦與一個部分對手防禦；**前 100 公會的批次防禦取得尚未完成**。公開玩家回應中的 `guildwar` 已確認是進攻編隊，不能匯入為十塔防禦。細節以 current-state 為準；倉庫只提供經白名單處理的顯示資料，不包含原始帳號識別與研究副本。
 
 ## 資料範圍與限制
 
