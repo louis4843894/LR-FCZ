@@ -25,6 +25,10 @@ def main():
     cases=[]
     extras=[] if origin.endswith(':3101') else [origin]
     with Browser('character-hydration-'+args.phase+'-'+origin.split(':')[-1].replace('/',''),protocol_timeout=180,extra_origins=extras) as b:
+        # Headless Edge may have no OS window focus. A real keyboard/focus
+        # check requires an active page; do not alter CSS to make it pass.
+        b.call('Page.bringToFront')
+        b.call('Emulation.setFocusEmulationEnabled',{'enabled':True})
         b.call('Network.enable')
         b.call('Emulation.setScriptExecutionDisabled',{'value':True})
         b.navigate(origin+path,390,'!!document.querySelector("main.character-detail-page")')
@@ -53,10 +57,13 @@ def main():
                 time.sleep(.2)
             b.evaluate('new Promise(r=>setTimeout(r,500))')
             client=b.evaluate(STRUCTURE)
-            b.evaluate('document.querySelector(".skip-navigation").click()')
+            b.evaluate('document.querySelector(".skip-navigation").focus()')
+            skip_visible=b.evaluate('document.hasFocus()&&document.activeElement===document.querySelector(".skip-navigation")&&document.activeElement.getBoundingClientRect().top>=0')
+            b.call('Input.dispatchKeyEvent',{'type':'keyDown','key':'Enter','code':'Enter','windowsVirtualKeyCode':13,'text':'\r','unmodifiedText':'\r'})
+            b.call('Input.dispatchKeyEvent',{'type':'keyUp','key':'Enter','code':'Enter','windowsVirtualKeyCode':13})
             skip_works=b.evaluate('document.activeElement===document.querySelector("main")')
             errors=[s for s in b.console_errors+b.console_warnings if HYDRATION.search(s)]
-            checks={'sameInitialStructure':server==client,'skipAndHeaderPresent':client is not None and client['skipCount']==1 and client['headerCount']==1,'skipInStableLayout':args.phase=='before' or client is not None and client['skipParent']=='body' and client['skipBeforeHeader'],'validNesting':client is not None and not client['skipNestedInButton'] and client['mainCount']==1,'skipFocusesMain':skip_works,'noHydrationConsoleErrors':not errors,'noRuntimeExceptions':not b.errors}
+            checks={'sameInitialStructure':server==client,'skipAndHeaderPresent':client is not None and client['skipCount']==1 and client['headerCount']==1,'skipInStableLayout':args.phase=='before' or client is not None and client['skipParent']=='body' and client['skipBeforeHeader'],'validNesting':client is not None and not client['skipNestedInButton'] and client['mainCount']==1,'focusedSkipVisible':skip_visible,'skipEnterFocusesMain':skip_works,'noHydrationConsoleErrors':not errors,'noRuntimeExceptions':not b.errors}
             b.screenshot(entry)
             cases.append({'entry':entry,'checks':checks,'serverStructure':server,'clientStructure':client,'hydrationConsoleErrors':errors,'consoleErrors':b.console_errors,'runtimeErrors':b.errors})
     passed=all(all(c['checks'].values()) for c in cases)
