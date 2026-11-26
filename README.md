@@ -33,6 +33,19 @@ npm.cmd test
 npm.cmd run build
 ```
 
+## Vercel 環境變數
+
+在專案 Settings → Environment Variables 新增以下兩項，環境選 Production、Preview：
+
+```text
+NEXT_PUBLIC_SUPABASE_URL=https://<project-id>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+```
+
+值使用自己的 Supabase 專案 URL 與 Publishable key。`SUPABASE_URL` 僅是同專案網址的可選 server override；`SUPABASE_SECRET_KEY`、`LR_LOCAL_DATABASE_PATH`、`LR_NEXT_DIST_DIR` 不需填入 Vercel，`NODE_ENV` 由平台管理。環境變數變更只影響後續部署，見 [Vercel 官方說明](https://vercel.com/docs/environment-variables/managing-environment-variables)。
+
+**目前正式環境尚未接齊資料**：角色、PVP、公會、裝備效果研究對照及私有圖片讀取仍有 development／loopback 限制；Supabase 研究快照目前為私有草稿。填入上述兩項只設定既有公開查詢連線，不會自動讓本機資料在 Vercel 顯示。正式發布需要另外完成可公開資料的白名單讀取與素材串接，不能靠把 `NODE_ENV` 設成 development 取代。
+
 ## 目前功能
 
 - `/gear`：953 筆裝備搜尋、篩選、詳細資料與效果參考；制服已確認為 6 星 ARMOR。

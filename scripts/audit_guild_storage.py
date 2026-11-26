@@ -24,13 +24,16 @@ def build():
                'guild-existing-eson-format-check.json', 'guild-confirm-entry-references.json',
                'public-guildwar-reference-complete-schema.json',
                'guild-normal-embedded-schema-check.json',
+               'guild-profile-to-war-context-check.json', 'guild-public-admin-code-check.json',
+               'loading-unit-native-consumer-check.json',
                'guild-top100-defense-coverage.json',
                'ghidra/guild-complete-storage-roots-1242.txt',
                'ghidra/guild-whole-readers-and-cache-writers-1242.txt',
                'ghidra/guild-profile-search-confirm-semantics-1242.txt',
                'ghidra/guild-db-storage-writer-proof-1242.txt',
                'ghidra/guild-confirm-response-and-callers-1242.txt',
-               'ghidra/guild-confirm-normal-ui-callers-1242.txt']
+               'ghidra/guild-confirm-normal-ui-callers-1242.txt',
+               'ghidra/loading-unit-storage-consumer-1242.txt']
     evidence = []
     functions = set()
     for source in sources:
@@ -90,6 +93,9 @@ def build():
             'esonAssets': read('guild-existing-eson-format-check.json'),
             'publicLegendExportSchema': read('public-guildwar-reference-complete-schema.json'),
             'normalGuildEmbeddedSchema': read('guild-normal-embedded-schema-check.json'),
+            'profileToWarContext': read('guild-profile-to-war-context-check.json'),
+            'publicAdminSource': read('guild-public-admin-code-check.json'),
+            'loadingUnitExpectedConsumer': read('loading-unit-native-consumer-check.json'),
         },
         'currentTop100DefenseCoverage': coverage['summary'],
         'remainingGaps': [
