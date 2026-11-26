@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "../styles.css";
 import "../styles/dark-catalog.css";
 import "../styles/catalog-tools.css";
+import { SkipNavigation } from "./_components/skip-navigation";
 
 export const metadata: Metadata = {
   title: "Ranger Atlas｜LINE Rangers 資料站",
@@ -15,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-Hant">
-      <body>{children}</body>
+      <body><SkipNavigation />{children}</body>
     </html>
   );
 }

@@ -18,7 +18,7 @@ class Browser:
         if not 1<=protocol_timeout<=180:raise ValueError('browser protocol time bound')
         self.protocol_timeout=protocol_timeout
         self.extra_origins=frozenset(extra_origins)
-        if self.extra_origins-{'https://lr-fcz.vercel.app'}:
+        if self.extra_origins-{'https://lr-fcz.vercel.app','http://127.0.0.1:3000'}:
             raise ValueError('extra preview origin is outside the user-provided deployment')
         self.folder=ROOT/'data/research/runtime.private/browser-ui'/label
         self.folder.mkdir(parents=True,exist_ok=True)
@@ -28,7 +28,7 @@ class Browser:
             '--remote-debugging-port=0','--remote-debugging-address=127.0.0.1',
             '--user-data-dir='+str(profile),'about:blank'],stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,creationflags=0x08000000)
-        self.ws=None;self.sequence=0;self.errors=[];self.document_loader=None
+        self.ws=None;self.sequence=0;self.errors=[];self.console_errors=[];self.console_warnings=[];self.document_loader=None
         try:
             for _ in range(60):
                 try:
@@ -52,6 +52,11 @@ class Browser:
                 if not frame.get('parentId'):self.document_loader=frame.get('loaderId')
             if message.get('method')=='Runtime.exceptionThrown':
                 self.errors.append(message['params']['exceptionDetails'].get('text','exception'))
+            if message.get('method')=='Runtime.consoleAPICalled' and message['params']['type'] in ('error','warning'):
+                params=message['params']
+                text=' '.join(str(arg.get('value',arg.get('description',''))) for arg in params.get('args',[]))[:12000]
+                target=self.console_errors if params['type']=='error' else self.console_warnings
+                if len(target)<100:target.append(text)
             if message.get('id')==identity:
                 if 'error' in message:raise RuntimeError('browser protocol error: '+method)
                 return message.get('result',{})

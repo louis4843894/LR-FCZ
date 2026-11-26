@@ -1,5 +1,13 @@
 # LR 目前可續接狀態（2026-11-27）
 
+## 最新：角色頁 hydration 與公會防禦續查（11/27）
+
+- 使用者回報server為skip-navigation按鈕、client為header。檢查現行SiteHeader沒有window／storage／matchMedia或掛載條件決定初始節點，角色頁與root沒有非法button巢狀。**本輪在當前3101與Vercel版本未重現該歷史console差異**；兩個dev實際回傳的header chunk SHA相同，不能把舊快取／版本混用當成已證實唯一根因。
+- 實際測到3000預覽缺少React事件，三種進入方式的跳過導覽都不能聚焦；不是「console沒報錯所以通過」。辨識原Next程序後只重啟3000，改用獨立 `.next-local-hydration-dev3000`，保留舊.next與全部資料；重啟後三案例均真正互動成功。3101與雷電不受此重啟影響。
+- **結構修正**：新增 `app/_components/skip-navigation.tsx`，root layout body固定先輸出全站唯一按鈕；SiteHeader只負責header／導覽，不再把全站按鈕放在每頁client元件的首節點。按鈕初次JSX固定，瀏覽器API只在啟用時執行；保留聚焦main／捲動功能與CSS顯示方式。未使用suppressHydrationWarning、停用SSR或刪除按鈕。
+- 補上Browser的console.error／warning收集；先前僅收Runtime.exceptionThrown，不足以證明沒有React recoverable hydration錯誤。新 `verify_character_hydration.py` 比對停用JS的server結構與首次client結構，等待React事件掛載，驗證直接開網址／重新整理／列表點入與按鈕實際聚焦；失敗不以靜態HTML當成功。
+- 修正後3000 dev、3101 dev及獨立production各3案例通過，hydration console錯誤0；型別、lint、2-worker production build通過。建置 `.next-local-hydration-build`，無套件／lock或資料改動。報告 `character-hydration-{before,after,production}-*.json`、`character-hydration-build.log`。線上修正驗證與公會續查結果接續補在本節。
+
 ## 最新：圖鑑操作優化與 Vercel 顯示資料（11/27）
 
 - 本輪依參考網站公開的搜尋／進階篩選方式完善既有介面：首頁可切換角色／裝備／公會快速查詢；角色／裝備圖鑑新增可逐項移除的篩選標籤、結果範圍、數字分頁與直接跳頁，保留重複效果參數及 AND／OR。裝備多選改成可搜尋勾選清單，隱藏選項仍保留勾選；角色排序新增星等／中文名稱。長涵蓋說明收合、空結果可重設。手機選單支援 Escape／外部點擊關閉與鍵盤焦點返回，詳細頁有父層導覽。原防禦收合版型與資料判定保留。

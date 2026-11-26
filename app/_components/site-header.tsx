@@ -17,7 +17,7 @@ export function SiteHeader(){
     document.addEventListener('keydown',escape);document.addEventListener('pointerdown',outside);
     return()=>{document.removeEventListener('keydown',escape);document.removeEventListener('pointerdown',outside);};
   },[open]);
-  return <><button className="skip-navigation" onClick={()=>{const main=document.querySelector('main');if(main){main.tabIndex=-1;main.focus();main.scrollIntoView({block:'start'});}}}>跳至主要內容</button><header className="site-header" ref={header}>
+  return <><header className="site-header" ref={header}>
     <Link className="site-brand" href="/" onClick={()=>setOpen(false)}><span className="site-brand-mark" aria-hidden="true">R</span><span><strong>RANGER ATLAS</strong><small>LINE Rangers 資料站</small></span></Link>
     <button className="nav-toggle" ref={toggle} aria-expanded={open} aria-controls="module-navigation" onClick={()=>setOpen(!open)}>{open?"關閉選單":"開啟選單"}<span aria-hidden="true">{open?'×':'☰'}</span></button>
     <div className={`site-navigation ${open?"is-open":""}`} id="module-navigation"><p className="nav-section-label">資料查詢</p><nav className="module-nav" aria-label="資料模組">{modules.map(m=><Link className={`module-nav-link ${active?.href===m.href?"is-active":""}`} href={m.href} key={m.href} aria-current={active?.href===m.href?"page":undefined} onClick={()=>setOpen(false)}><span className="module-symbol" aria-hidden="true">{m.symbol}</span><span>{m.label}</span><span className="module-arrow" aria-hidden="true">›</span></Link>)}</nav><div className="nav-bottom"><span>LINE RANGERS</span><Link href="/data-status" onClick={()=>setOpen(false)}>資料更新狀態</Link></div></div>
