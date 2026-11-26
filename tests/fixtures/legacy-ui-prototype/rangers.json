@@ -1,0 +1,12 @@
+{
+  "source": "fabricated-demo",
+  "status": "demo",
+  "items": [
+    { "id": "DEMO-R01", "name": "示範 Ranger 01", "type": "力量", "element": "火", "stars": 9, "hp": 128000, "attack": 28400, "range": 120, "speed": 82 },
+    { "id": "DEMO-R02", "name": "示範 Ranger 02", "type": "敏捷", "element": "水", "stars": 8, "hp": 93600, "attack": 31700, "range": 175, "speed": 104 },
+    { "id": "DEMO-R03", "name": "示範 Ranger 03", "type": "智慧", "element": "木", "stars": 9, "hp": 105000, "attack": 36200, "range": 220, "speed": 76 },
+    { "id": "DEMO-R04", "name": "示範 Ranger 04", "type": "力量", "element": "光", "stars": 8, "hp": 156000, "attack": 24100, "range": 105, "speed": 91 },
+    { "id": "DEMO-R05", "name": "示範 Ranger 05", "type": "智慧", "element": "暗", "stars": 9, "hp": 88400, "attack": 39100, "range": 205, "speed": 88 },
+    { "id": "DEMO-R06", "name": "示範 Ranger 06", "type": "敏捷", "element": "火", "stars": 8, "hp": 112000, "attack": 29800, "range": 160, "speed": 115 }
+  ]
+}

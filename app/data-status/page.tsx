@@ -1,0 +1,24 @@
+import {PvpAutoUpdateStatus} from "../_components/pvp-auto-update-status";
+import Link from "next/link";
+import { SiteHeader } from "../_components/site-header";
+import { SiteFooter } from "../_components/site-footer";
+import { getAcquisitionProgress } from "../../lib/acquisition-progress";
+
+export default async function DataStatusPage(){
+  const data=await getAcquisitionProgress();
+  return <div className="page-shell"><SiteHeader/><main className="page-main"><section className="page-intro"><p className="eyebrow">實際資料涵蓋範圍</p><h1>完成度與尚未完成項目</h1><p className="page-lede">依目前有效資料計數；取得名單、取得隊伍、還原實際數值及核對畫面是不同階段。</p></section>
+    {!data ? <p>目前環境未開啟本機研究資料。</p> : <>
+      <section className="reference-panel"><h2>已取得資料</h2><p>儲存：{data.storage}。裝備模板 {data.templates} 筆；角色基本資料 {data.characters} 筆。</p>{data.rankedGuildSummary ? <p>公會前 100 名已取得 {data.rankedGuildSummary.guilds} 個公會；完整成員名單 {data.rankedGuildSummary.completeRosters} 份，共 {data.rankedGuildSummary.members.toLocaleString("zh-TW")} 位成員。公會戰防禦已取得 {data.rankedGuildSummary.defenseGuilds} 個公會，其他配置未知。</p> : data.guildMatches ? <p>公會 {data.selectedGuildName} 名單 {data.guildTotal} 人；另保存成員非排名 PVP 觀察 {data.guildPlayers} 人、{data.guildTeams} 隊。這些不是公會戰防禦。</p> : <p>目標公會「{data.selectedGuildName}」：成員總數、名單及公會防禦均尚未取得。歷史公會資料保留，不混入此目標。</p>}<p>全部非排名歷史觀察：{data.pvpPlayers} 人、{data.pvpTeams} 組 PVP 防禦。含缺漏位置 {data.partialTeams} 隊；讀取失敗 {data.failedTeams} 隊。它們不構成排名樣本。</p><p>非排名歷史裝備 {data.equipment} 件，模板關聯 {data.equipmentMatched}／{data.equipment}；強化已取得 {data.enhancementKnown} 件。相同模板的不同實例分開保存。</p><p>非排名歷史屬性條目 {data.attributeEntries} 筆，其中實際數值已還原 {data.attributeValues} 筆，仍未知 {data.attributeUnknown} 筆；條目數不等於隨機詞條數。</p><p>最近防禦取得：{data.latestDefenseAt ? new Date(data.latestDefenseAt).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",hour12:false}) : "尚未取得"}。</p><p><Link href="/guild">查看指定公會</Link> · <Link href="/pvp">PVP 排行來源</Link> · <Link href="/pvp/observations">非排名歷史觀察</Link></p></section>
+      <section className="reference-panel"><h2>各段位排行與防禦</h2><p>真實排行榜已取得 {data.rankingPlayers} 位不重複玩家。各段位獨立保存；未提供隊伍不代表沒有防禦。數量僅涵蓋此次來源，全段位完整性尚未確認。</p><div className="reference-table-wrap"><table className="reference-table"><thead><tr><th>段位</th><th>排名玩家</th><th>完整取得</th><th>部分缺漏</th><th>未提供</th><th>失敗／未讀</th><th>隊伍</th><th>名單核對時間</th></tr></thead><tbody>{data.rankingCohorts.map(c=><tr key={c.scope}><td><Link href={`/pvp?scope=${encodeURIComponent(c.scope)}&top=200`}>{c.scope}</Link></td><td>{c.players}</td><td>{c.success}</td><td>{c.partial}</td><td>{c.unavailable}</td><td>{c.failed}／{c.notRead}</td><td>{c.teams}</td><td>{new Date(c.lastCheckedAt).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",hour12:false})}</td></tr>)}</tbody></table></div></section>
+      <section className="reference-panel"><h2>尚未完成</h2><ul>
+        <li>前 100 名公會的公會戰防禦完整取得及核對；成員名單與 PVP 排行樣本分開。</li>
+        <li>公會戰十座塔的駐防名單與配置。{data.guildBattleUnavailable ? "使用者已確認目前公會未報名，十塔配置不可取得；不代表沒有駐防。" : `目前成功取得 ${data.guildBattleTeams} 隊，不能用 PVP 隊伍替代。`}</li>
+        <li>進階、Skill+、特殊效果及觸發條件；非排名歷史仍有 {data.attributeUnknown} 筆已讀條目數值未知，傳奇榜目前版本另有 {data.rankingAttributeUnknown} 筆未知，其他段位與未讀依賴另計。</li>
+        <li>角色星等已確認 {data.characterCoverage?.stars ?? 0}／{data.characters}；{(data.characterCoverage?.stars ?? 0)<data.characters ? "仍有星等待確認。" : "已取得模板的星等均已確認。"}技能／效果對照 {data.characterCoverage?.skillDetails ?? 0}、角色能力 {data.characterCoverage?.abilityDetails ?? 0}、覺醒候選 {data.characterCoverage?.awakeningDetails ?? 0}、才能 {data.characterCoverage?.talentDetails ?? 0} 個角色。圖片 {data.characterCoverage?.images ?? 0}／{data.characters}，其餘圖片尚未取得。模板效果不代表玩家實際培養或覺醒結果。已對照 {data.characterCoverage?.matchedDetails??0} 個模板；未收錄 {data.characterCoverage?.notInReference??0} 個模板，不當成沒有能力。{data.characterCoverage?.skillsAbsent!=null&&<> 已確認無技能 {data.characterCoverage.skillsAbsent}、無角色能力 {data.characterCoverage.abilitiesAbsent}、無覺醒候選 {data.characterCoverage.awakeningAbsent}。</>}{data.characterCoverage?.talentsAbsent!=null&&<> 本機確認未設定才能 {data.characterCoverage.talentsAbsent}。</>}</li>
+        <li>真實排行榜已取得 {data.rankingPlayers} 位玩家；傳奇榜有效防禦樣本 {data.rankingSamples} 位、{data.rankingTeams} 隊、{data.rankingEquipment} 件裝備，模板關聯 {data.rankingEquipmentMatched}／{data.rankingEquipment}。排名目前版本的效果 ID／階級共 {data.rankingAttributeEntries} 筆，已還原數值 {data.rankingAttributeValues} 筆、未知 {data.rankingAttributeUnknown} 筆。舊原生數值版本仍另行保留。傳奇榜未讀取 {data.rankingNotRead} 位、失敗 {data.rankingFailures} 位。只計算樣本內比例，不計算勝率。公會成員及其他可見玩家不能充作排名樣本。</li>
+        <li>全遊戲裝備／角色完整性、本機 .db 解密與可脫離遊戲載入狀態的更新來源尚未確認。</li>
+      </ul>{data.unknownEquipmentIds.length>0&&<p>尚未關聯的裝備模板：{data.unknownEquipmentIds.join("、")}</p>}</section>
+      <section className="reference-panel"><h2>更新規則</h2><p>公會每週二 12:00（台灣時間）排程嘗試更新名單。PVP 使用遊戲已確認的正常請求直接更新排行與防禦，不需逐頁切換；名單快取 60 秒，防禦快取預設 5 分鐘，可強制更新。仍需有效的本機遊戲工作階段；拒絕存取即停止，失敗保留有效舊版本。原始副本與內部玩家識別不提供前端。</p><PvpAutoUpdateStatus/><p>目前僅本機驗證，尚未部署。模板範圍與玩家實際數值分開標示。</p></section>
+    </>}
+  </main><SiteFooter/></div>;
+}

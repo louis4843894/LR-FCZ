@@ -1,0 +1,16 @@
+import Link from "next/link";
+import {SiteHeader} from "../_components/site-header";
+import {SiteFooter} from "../_components/site-footer";
+import {getGuildRankings} from "../../lib/guild-rankings";
+const time=(s:string)=>new Date(s).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",hour12:false});
+export default async function GuildPage({searchParams}:{searchParams:Promise<{q?:string;grade?:string}>}){
+ const data=await getGuildRankings();const {q="",grade=""}=await searchParams;
+ const query=q.trim().toLocaleLowerCase();const guilds=data?.guilds.filter(g=>(!grade||g.grade===grade)&&(!query||g.name.toLocaleLowerCase().includes(query)||String(g.rank)===query))??[];
+ return <div className="page-shell"><SiteHeader/><main className="page-main">
+ <section className="page-intro"><p className="eyebrow">GUILD WAR</p><h1>公會排名</h1><p className="page-lede">查看前 100 名公會、成員名單與公會戰防禦配置。</p></section>
+ {data?<><section className="catalog-summary" aria-label="公會資料概況"><div><span>資料更新時間</span><strong>{time(data.capturedAt)}</strong></div><div><span>排名範圍</span><strong>第 1～{data.top} 名</strong></div><div><span>已取得名單</span><strong>{data.completeRosters}／{data.guilds.length} 公會</strong></div><div><span>已取得成員</span><strong>{data.membersRetrieved.toLocaleString("zh-TW")} 人</strong></div><div><span>公會戰防禦取得狀態</span><strong>完整 {data.defenseGuilds} · 部分 {data.partialDefenseGuilds}</strong><span>其餘 {data.defenseNotAcquiredGuilds} 個公會尚未取得防禦</span></div></section>
+ <form className="gear-filters" action="/guild"><label>段位<select name="grade" defaultValue={grade}><option value="">全部段位</option>{[...new Set(data.guilds.map(g=>g.grade))].map(g=><option key={g}>{g}</option>)}</select></label><label>搜尋公會<input type="search" name="q" defaultValue={q} placeholder="公會名稱或排名"/></label><button className="button button-primary">搜尋</button><Link className="button" href="/guild">清除</Link></form>
+ <p role="status" className="list-count">{guilds.length} 個公會</p><details className="ranking-list catalog-fold" open><summary><h2>公會前 100 名</h2></summary><div className="ranking-table-wrap"><table className="ranking-table" aria-label="公會前100名"><thead><tr><th>排名</th><th>公會</th><th>段位</th><th>分數</th><th>成員</th><th>國家／地區</th><th>公會戰防禦</th></tr></thead><tbody>{guilds.map(g=><tr className="guild-ranking-row" key={g.alias}><td><span className={`rank-number ${g.rank<=3?"rank-leading":""}`}>{g.rank}</span></td><td><Link className="ranking-name" href={`/guild/${g.alias}`}>{g.name}</Link><small>公會 Lv.{g.level} · {g.rosterState==='failed'?"本次更新未完成，保留既有名單":g.membershipComplete?"名單已取得":g.rosterState==='partial'?"名單部分取得":"名單尚未取得"}</small></td><td>{g.grade}</td><td>{g.score.toLocaleString("zh-TW")}</td><td>{g.memberCount}／{g.memberCapacity}</td><td>{g.nation||"未知"}</td><td><Link href={`/guild/${g.alias}#defense`}>{g.defenseState==='success'?"查看防禦":g.defenseState==='partial'?`查看部分防禦（${g.defenseTowersRead}／${g.defenseTowersObserved} 塔）`:g.warOverviewAvailable?"查看塔總覽（駐防未取得）":g.defenseState==='unavailable'?"目前不可取得":"尚未取得"}</Link></td></tr>)}</tbody></table></div></details>
+ {!guilds.length&&<p className="empty-panel">沒有符合條件的公會。</p>}<p className="catalog-note">公會資料每週二 12:00（台灣時間）更新。排名與成員名單各有取得時間；尚未取得防禦不代表沒有駐防。</p></>:<section className="reference-panel"><h2>公會資料準備中</h2><p>目前尚未取得可顯示的前 100 名公會資料。</p></section>}
+ </main><SiteFooter/></div>;
+}

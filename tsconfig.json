@@ -1,0 +1,86 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    ".next-local-validation/types/**/*.ts",
+    ".next-local-validation/dev/types/**/*.ts",
+    ".next-local-dev/types/**/*.ts",
+    ".next-local-dev/dev/types/**/*.ts",
+    ".next-local-member-20261125/types/**/*.ts",
+    ".next-local-member-20261125/dev/types/**/*.ts",
+    ".next-local-continuation-20261125/types/**/*.ts",
+    ".next-local-continuation-20261125/dev/types/**/*.ts",
+    ".next-local-rank-dev/types/**/*.ts",
+    ".next-local-rank-dev/dev/types/**/*.ts",
+    ".next-local-rank-build/types/**/*.ts",
+    ".next-local-rank-build/dev/types/**/*.ts",
+    ".next-local-ui-guild-dev/types/**/*.ts",
+    ".next-local-ui-guild-dev/dev/types/**/*.ts",
+    ".next-local-ui-guild-build/types/**/*.ts",
+    ".next-local-ui-guild-build/dev/types/**/*.ts",
+    ".next-local-guildwar-build/types/**/*.ts",
+    ".next-local-guildwar-build/dev/types/**/*.ts",
+    ".next-local-guildwar-dev/types/**/*.ts",
+    ".next-local-guildwar-dev/dev/types/**/*.ts",
+    ".next-local-guildwar-values-build/types/**/*.ts",
+    ".next-local-guildwar-values-build/dev/types/**/*.ts",
+    ".next-local-guildwar-options-build/types/**/*.ts",
+    ".next-local-guildwar-options-build/dev/types/**/*.ts",
+    ".next-local-guildwar-options-dev/types/**/*.ts",
+    ".next-local-guildwar-options-dev/dev/types/**/*.ts",
+    ".next-local-character-details-build/types/**/*.ts",
+    ".next-local-character-details-build/dev/types/**/*.ts",
+    ".next-local-character-details-dev/types/**/*.ts",
+    ".next-local-character-details-dev/dev/types/**/*.ts",
+    ".next-local-character-details-dev-final/types/**/*.ts",
+    ".next-local-character-details-dev-final/dev/types/**/*.ts",
+    ".next-local-character-instances-build/types/**/*.ts",
+    ".next-local-character-instances-build/dev/types/**/*.ts",
+    ".next-local-character-instances-dev/types/**/*.ts",
+    ".next-local-character-instances-dev/dev/types/**/*.ts",
+    ".next-local-character-guild-native-build/types/**/*.ts",
+    ".next-local-character-guild-native-build/dev/types/**/*.ts",
+    ".next-local-character-guild-native-dev/types/**/*.ts",
+    ".next-local-character-guild-native-dev/dev/types/**/*.ts",
+    ".next-local-defense-viewer-build/types/**/*.ts",
+    ".next-local-defense-viewer-build/dev/types/**/*.ts",
+    ".next-local-availability-opponent-build/types/**/*.ts",
+    ".next-local-availability-opponent-build/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "data/research/runtime.private"
+  ]
+}

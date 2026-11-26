@@ -1,0 +1,11 @@
+{
+  "source": "fabricated-demo",
+  "status": "demo",
+  "items": [
+    { "rank": 1, "name": "示範公會 Alpha", "score": 987654, "members": 30, "period": "示範賽季" },
+    { "rank": 2, "name": "示範公會 Bravo", "score": 932100, "members": 29, "period": "示範賽季" },
+    { "rank": 3, "name": "示範公會 Charlie", "score": 901250, "members": 30, "period": "示範賽季" },
+    { "rank": 4, "name": "示範公會 Delta", "score": 876500, "members": 28, "period": "示範賽季" },
+    { "rank": 5, "name": "示範公會 Echo", "score": 850300, "members": 30, "period": "示範賽季" }
+  ]
+}

@@ -1,0 +1,65 @@
+.next/
+.next*/
+.tsupgrader/
+node_modules/
+out/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+.vercel/
+supabase/.temp/
+
+# Local environment and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Original game files and extracted contents
+/data/raw/*
+!/data/raw/.gitkeep
+/data/extracted/*
+!/data/extracted/.gitkeep
+/data/research/ghidra/
+/data/research/ghidra-12.4.2-targeted/
+*.apk
+*.obb
+*.xapk
+*.apks
+*.dex
+*.odex
+*.so
+*.assetbundle
+*.unity3d
+
+# Private or account-specific data
+private-data/
+personal-data/
+/data/local/
+*.private.*
+*.personal.*
+*.secret.*
+*.credentials.*
+*.account.*
+
+# Local runtime captures and observation tools (never commit)
+/data/research/runtime.private/
+/data/research/
+/data/inventory/
+/data/normalized/**/runs/
+.pytest_cache/
+
+# Local research evidence may contain player identifiers and capture metadata.
+/reports/
+
+.next-local-validation/
+
+/data/research/external-reference/
+
+.next-local-dev/
+.next-local-member-20261125/
+
+# External research preview; publication license not established
+/data/normalized/equipment-reference-preview.json
+
+/data/normalized/character-reference-preview.json

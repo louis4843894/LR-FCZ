@@ -1,0 +1,27 @@
+import Link from "next/link";
+import { SiteHeader } from "../_components/site-header";
+import { SiteFooter } from "../_components/site-footer";
+import { getPvpRankings } from "../../lib/pvp-rankings";
+import {CollapseControls} from '../_components/collapse-controls';
+import {PvpAutoUpdateStatus} from '../_components/pvp-auto-update-status';
+const time=(s:string)=>new Date(s).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",hour12:false});
+export default async function PvpPage({searchParams}:{searchParams:Promise<{scope?:string;top?:string;q?:string}>}){
+ const query=await searchParams;const data=await getPvpRankings(query.scope,Number(query.top??100));const q=query.q?.trim()??"";
+ const players=data?.players.filter(p=>!q||p.name.toLocaleLowerCase().includes(q.toLocaleLowerCase())||String(p.rank)===q||String(p.score)===q)??[];
+ return <div className="page-shell"><SiteHeader/><main className="page-main"><section className="page-intro"><p className="eyebrow">PvP RANKINGS</p><h1>{data?`${data.scopeLabel}排行榜`:"PvP 排行與防禦"}</h1><p className="page-lede">查看各段位玩家排名、分數與防禦角色配裝。</p></section>
+ {!data?<section className="reference-panel"><h2>排名資料尚未取得</h2><p>目前尚無可查詢的排行榜，暫不顯示使用率。</p></section>:<>
+ <section className="catalog-summary"><div><span>名單更新時間</span><strong>{time(data.rankingCheckedAt)}</strong></div><div><span>段位</span><strong>{data.scopeLabel}</strong></div><div><span>收錄玩家</span><strong>{data.retrievedPlayerCount} 人</strong></div><div><span>防禦有效樣本</span><strong>{data.stats.validPlayers} 人</strong></div></section>
+ <PvpAutoUpdateStatus/>
+ <form action="/pvp" className="gear-filters"><label>段位<select name="scope" defaultValue={data.scopeLabel}>{data.scopes.map(scope=><option key={scope}>{scope}</option>)}</select></label><label>排名範圍<select name="top" defaultValue={String(data.top)}>{[10,30,50,100,200].map(n=><option key={n} value={n}>第 1～{n} 名</option>)}</select></label><label>搜尋玩家<input name="q" type="search" defaultValue={q} placeholder="名稱、排名或分數"/></label><button className="button button-primary">搜尋</button></form>
+ <p className="list-count" role="status">{players.length} 位玩家 · 統計範圍第 1～{data.top} 名，搜尋僅篩選名單。</p>
+ <details className="ranking-list catalog-fold" open><summary><h2>排名玩家</h2></summary><div className="ranking-table-wrap"><table className="ranking-table" aria-label="排名玩家名單"><thead><tr><th>排名</th><th>玩家</th><th>分數</th><th>防禦狀態</th><th>最近核對</th><th>隊伍</th></tr></thead><tbody>{players.map(p=><tr className="ranking-player" key={p.alias}><td><span className={`rank-number ${p.rank<=3?"rank-leading":""}`}>{p.rank}</span></td><td>{p.hasDefense?<Link className="ranking-name" href={`/pvp/players/${p.alias}?snapshot=${encodeURIComponent(data.snapshotId)}`}>{p.name}</Link>:p.name}</td><td>{p.score.toLocaleString("zh-TW")}</td><td>{({success:"已取得",partial:"部分取得",failed:"更新失敗",unavailable:"未提供",not_read:"尚未取得"} as Record<string,string>)[p.defenseState]??"未知"}</td><td>{p.lastCheckedAt?time(p.lastCheckedAt):"尚未核對"}</td><td>{p.hasDefense?<Link href={`/pvp/players/${p.alias}?snapshot=${encodeURIComponent(data.snapshotId)}`}>查看防禦</Link>:"尚未取得"}</td></tr>)}</tbody></table></div></details>
+ {!players.length&&<p className="empty-panel">沒有符合條件的玩家。</p>}
+ <p className="catalog-note">第 1～{data.top} 名：有效防禦 {data.stats.validPlayers} 人、部分缺漏 {data.stats.partialPlayers} 人、失敗或未提供 {data.stats.failedPlayers} 人、尚未讀取 {data.stats.notReadPlayers} 人。排行與配置各有取得時間，未提供防禦不代表沒有隊伍。全排行榜完整性尚未確認。</p>
+ <details className="reference-panel catalog-fold" aria-label="樣本內角色與裝備統計" data-collapse-scope><summary><h2>本次樣本統計</h2></summary><CollapseControls/><p>角色分母：{data.stats.validPlayers} 位有效玩家的選用防禦隊伍；備用隊伍不計入。裝備分母：{data.stats.equipmentValidPlayers} 位三部位資料完整的玩家；未知部位共 {data.stats.unknownEquipmentSlots} 個，不能當作未穿戴。</p><p>同一玩家不重複計數；使用玩家數與出場次數分開。這是已成功取得的樣本，不代表整體環境。沒有戰鬥結果資料，未計算勝率。</p>
+ {data.stats.validPlayers<2?<p>目前先展示個別玩家防禦；有效樣本不足，暫不顯示使用率。</p>:<><details className="catalog-fold"><summary><h3>角色</h3></summary><div className="reference-table-wrap"><table className="reference-table"><thead><tr><th>角色</th><th>使用玩家數</th><th>出場次數</th><th>樣本內玩家比例</th></tr></thead><tbody>{data.stats.characters.map(r=><tr key={r.id}><td>{r.known?<Link href={`/characters/${encodeURIComponent(r.id)}`}>{r.name}</Link>:r.id}</td><td>{r.playerCount}</td><td>{r.appearanceCount}</td><td>{r.rate===null?"未知":`${(r.rate*100).toFixed(1)}%`}</td></tr>)}</tbody></table></div></details>
+ <details className="catalog-fold"><summary><h3>裝備</h3></summary>{data.stats.equipmentValidPlayers<2?<p>裝備資料完整的玩家不足，暫不顯示裝備使用率。</p>:<div className="reference-table-wrap"><table className="reference-table"><thead><tr><th>裝備</th><th>使用玩家數</th><th>出場次數</th><th>樣本內玩家比例</th></tr></thead><tbody>{data.stats.equipment.map(r=><tr key={r.id}><td>{r.known?<Link href={`/gear/${encodeURIComponent(r.id+"_nm")}`}>{r.name}</Link>:r.id}</td><td>{r.playerCount}</td><td>{r.appearanceCount}</td><td>{r.rate===null?"未知":`${(r.rate*100).toFixed(1)}%`}</td></tr>)}</tbody></table></div>}</details>
+ <details className="catalog-fold"><summary><h3>同角色實例的裝備組合</h3></summary><ol>{data.stats.combinations.slice(0,20).map((r,i)=><li key={i}>{r.characterName}：{r.gearNames.join(" ／ ")} · 出場 {r.appearanceCount} 次</li>)}</ol></details></>}
+ </details></>}
+ <details className="reference-panel catalog-fold"><summary><h2>既有非排名資料</h2></summary><p>未帶排名來源的歷史隊伍另外保存，不計入這裡的統計。</p><p><Link href="/pvp/observations">查看非排名歷史觀察</Link> · <Link href="/data-status">查看完成度與尚未完成項目</Link></p></details>
+ </main><SiteFooter/></div>;
+}

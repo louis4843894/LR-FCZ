@@ -1,0 +1,33 @@
+import {describe,it,expect,vi,afterEach} from 'vitest';
+vi.mock('server-only',()=>({}));
+const state=vi.hoisted(()=>({value:null as unknown}));
+vi.mock('../lib/local-game-data',()=>({readNormalizedText:async()=>JSON.stringify(state.value),readRankedSnapshotKeys:async()=>new Set(),readCharacterInstanceProgress:async()=>new Map(),readNativeGearRolls:async()=>new Map(),readNativeGearLabels:async()=>({sourceId:'fixture-labels',records:[{attributeId:40000,typeEnum:34,code:'ALL_ATK_MUL',label:'總攻擊力 (%)'}]})}));
+vi.mock('../lib/character-reference',()=>({getCharacterReference:async()=>({records:[]})}));
+vi.mock('../lib/verified-equipment',()=>({getVerifiedEquipmentList:async()=>[{itemCode:'eq_fixture',dataCode:'eq_fixture_nm',names:{'zh-Hant':'測試裝備'},starCount:6,equipType:'WEAPON',reference:null}]}));
+vi.mock('../lib/equipment-mapping',()=>({getEquipmentMappingMap:async()=>new Map()}));
+vi.mock('../lib/local-research-assets',()=>({getLocalGearIconUrl:async()=>null}));
+import {getDefenseTeams} from '../lib/defense-teams';
+import {pvpViewerTeams} from '../lib/defense-viewer-data';
+afterEach(()=>vi.unstubAllEnvs());
+describe('Chinese labels alongside immutable instance values',()=>{
+ it('does not turn a template or guessed value into an actual value; keeps separate instances',async()=>{
+  vi.stubEnv('NODE_ENV','development');
+  const unit=(position:number,enhancement:number)=>({memberIndex:position,characterState:'present',characterId:'fixture-unit',characterInstanceIdentity:{value:'fixture-unit-'+position,namespace:'player-owned-unit',sourceField:'fixture'},equipment:{weapon:{state:'equipped',equipmentId:'eq_fixture',enhancement,actualEffects:{status:'partial_values',numericalValuesVerified:false,entries:[{index:0,attributeId:40000,valueGradeRaw:0,attributeTypeRaw:null,sourceField:'attr1No',value:999,unit:'PERCENT',valueVerified:false,enhancementIncluded:false},{index:1,attributeId:9,valueGradeRaw:0,attributeTypeRaw:21,attributeLabel:'重新產生時間 (%)',value:-30,unit:'PERCENT',valueVerified:true,enhancementIncluded:true}]}},armor:{state:'not_equipped',equipmentId:null,enhancement:null,actualEffects:null},accessory:{state:'unknown',equipmentId:null,enhancement:null,actualEffects:null}}});
+  state.value={sourceKind:'validated-player-team-snapshots',recordScope:'player-team',snapshots:[{snapshotId:'fixture-team',playerId:'fixture-private-owner',teamId:'pvpteam/1',purpose:'pvp_defense',status:'success',retrievedAt:'2026-11-26T00:00:00Z',guildId:null,members:[unit(0,5),unit(1,2)]}]};
+  const result=await getDefenseTeams('pvp_defense');const members=result![0].members!;
+  expect(members.map(m=>m.slots[0].enhancement)).toEqual([5,2]);
+  expect(members[0].slots[0].actualEffects?.entries[0]).toMatchObject({displayLabel:'總攻擊力 (%)',labelStatus:'native-id',value:null});
+  expect(members[0].slots[0].actualEffects?.entries[1]).toMatchObject({displayLabel:'重新產生時間 (%)',value:-30,enhancementIncluded:true});
+  expect(members[0].slots.map(s=>s.state)).toEqual(['equipped','not_equipped','unknown']);
+  expect(JSON.stringify(result)).not.toContain('fixture-private-owner');
+  const display=pvpViewerTeams(result!);const units=display[0].units;
+  expect(new Set(units.map(u=>u.key)).size).toBe(2);
+  expect(units.map(u=>u.gear[0].enhancement)).toEqual([5,2]);
+  expect(units[0].gear[0].effects?.map(e=>e.value)).toEqual(['數值尚未解析','-30%']);
+  expect(units[0].gear.map(g=>g.state)).toEqual(['equipped','not_equipped','unknown']);
+  expect(units[0].gear[0].name).toBe('測試裝備');
+  expect(units[0].stars).toBeNull();
+  expect(JSON.stringify(display)).not.toMatch(/fixture-private|InstanceIdentity|sourceField|valueGradeRaw/);
+  expect(pvpViewerTeams([{...result![0],status:'failed'}])[0].units).toEqual([]);
+ });
+});

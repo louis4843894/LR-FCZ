@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "minimumGroup": "GOLD",
+  "scopes": [
+    {"label": "傳奇", "phaseCode": "LEGEND", "group": "傳奇"},
+    {"label": "大師1", "phaseCode": "MASTER_1", "group": "大師"},
+    {"label": "大師2", "phaseCode": "MASTER_2", "group": "大師"},
+    {"label": "大師3", "phaseCode": "MASTER_3", "group": "大師"},
+    {"label": "鑽石1", "phaseCode": "DIAMOND_1", "group": "鑽石"},
+    {"label": "鑽石2", "phaseCode": "DIAMOND_2", "group": "鑽石"},
+    {"label": "鑽石3", "phaseCode": "DIAMOND_3", "group": "鑽石"},
+    {"label": "黃金1", "phaseCode": "GOLD_1", "group": "黃金"},
+    {"label": "黃金2", "phaseCode": "GOLD_2", "group": "黃金"},
+    {"label": "黃金3", "phaseCode": "GOLD_3", "group": "黃金"}
+  ],
+  "legacyScopeAliases": {"大師": "大師3", "鑽石": "鑽石3", "黃金": "黃金3"}
+}

@@ -1,0 +1,18 @@
+{
+  "files.watcherExclude": {
+    "**/.next*/**": true,
+    "**/node_modules/**": true,
+    "**/data/raw/**": true,
+    "**/data/extracted/**": true,
+    "**/data/research/**": true,
+    "**/data/local/**": true
+  },
+  "search.exclude": {
+    "**/.next*/**": true,
+    "**/node_modules/**": true,
+    "**/data/raw/**": true,
+    "**/data/extracted/**": true,
+    "**/data/research/**": true,
+    "**/data/local/**": true
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "source": "fabricated-demo",
+  "status": "demo",
+  "items": [
+    { "id": "DEMO-G01", "name": "示範武器 A", "slot": "武器", "stars": 8, "effect": "攻擊力提升", "value": "示範 +12%", "trigger": "常駐" },
+    { "id": "DEMO-G02", "name": "示範防具 B", "slot": "防具", "stars": 8, "effect": "體力提升", "value": "示範 +15%", "trigger": "常駐" },
+    { "id": "DEMO-G03", "name": "示範飾品 C", "slot": "飾品", "stars": 7, "effect": "技能冷卻減少", "value": "示範 8%", "trigger": "常駐" },
+    { "id": "DEMO-G04", "name": "示範武器 D", "slot": "武器", "stars": 9, "effect": "攻擊速度提升", "value": "示範 +10%", "trigger": "攻擊時" },
+    { "id": "DEMO-G05", "name": "示範防具 E", "slot": "防具", "stars": 7, "effect": "受到傷害減少", "value": "示範 6%", "trigger": "受擊時" }
+  ]
+}

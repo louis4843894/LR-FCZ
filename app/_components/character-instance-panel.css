@@ -1,0 +1,4 @@
+.instance-character-panel{margin:1rem 0;padding:.85rem;border:1px solid var(--border,#334155);border-radius:10px;min-width:0}
+.instance-character-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));gap:.7rem;margin:0}
+.instance-character-facts div{min-width:0}.instance-character-facts dt{font-size:.8rem;opacity:.75}.instance-character-facts dd{margin:.2rem 0 0;font-weight:650;overflow-wrap:anywhere}
+.instance-character-note{font-size:.8rem;opacity:.8;line-height:1.65;margin:.8rem 0 0}.instance-awakening{margin-top:.8rem;font-size:.85rem}.instance-awakening p{white-space:pre-line;line-height:1.7;overflow-wrap:anywhere}.instance-awakening summary{cursor:pointer}

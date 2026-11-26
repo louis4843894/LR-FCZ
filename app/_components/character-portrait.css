@@ -1,0 +1,4 @@
+.character-portrait{display:inline-flex;flex:0 0 72px;width:72px;height:88px;align-items:center;justify-content:center;background:var(--surface-muted,#f2f7f6);border-radius:12px;overflow:hidden}
+.character-portrait img{width:100%;height:100%;object-fit:contain}.character-portrait-large{width:128px;height:160px;flex-basis:128px}.character-portrait-missing{font-size:1.7rem;color:#6b8490}
+.war-character-heading{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}.war-character-heading h4{min-width:0;overflow-wrap:anywhere}
+.native-talent-stages{display:grid;gap:.65rem;padding:0;list-style:none}.native-talent-stages li{padding:.7rem;border:1px solid var(--border,#d2dce3);border-radius:10px;line-height:1.65}.native-talent-stages p{margin:.35rem 0 0;white-space:pre-line}.native-talent-stages [data-state=locked]{opacity:.65}
