@@ -40,6 +40,10 @@
   margin: 0;
 }
 
+.page-shell .guild-access-actions a.button-primary {
+  color: #102c2d;
+}
+
 .guild-access-notice {
   padding: .75rem;
   background: #263c43;
