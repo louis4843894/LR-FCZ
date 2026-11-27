@@ -1,5 +1,5 @@
 import "server-only";
-import {readSiteDisplay} from './site-display-data';
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {createHash} from "node:crypto";
 import {readRankedGuildStore,readGuildWarStore} from "./local-game-data";
 import {getGuildWar,type WarRecord} from "./guild-war";
@@ -11,8 +11,16 @@ type Ranking={sourceKind:string;snapshotId:string;capturedAt:string;lastCheckedA
 const alias=(id:string)=>createHash('sha256').update(id).digest('hex').slice(0,20);
 const role=(r:string)=>({MASTER:'會長',SUBMASTER:'副會長',NORMAL:'成員'} as Record<string,string>)[r]??'職位未知';
 
-export async function getGuildRankings():Promise<Awaited<ReturnType<typeof getLocalGuildRankings>>>{
-  return process.env.NODE_ENV==='production'?readSiteDisplay('guilds'):getLocalGuildRankings();
+async function readGuildDisplay<T>(name: string, client?: SupabaseClient): Promise<T | null> {
+  if (!client) return null;
+  const { data, error } = await client.rpc("guild_access_display", { p_name: name });
+  if (error?.code === "42501") return null;
+  if (error) throw new Error("暫時無法讀取公會戰資料");
+  return data as T | null;
+}
+
+export async function getGuildRankings(client?: SupabaseClient):Promise<Awaited<ReturnType<typeof getLocalGuildRankings>>>{
+  return process.env.NODE_ENV==='production'?readGuildDisplay('guilds',client):getLocalGuildRankings();
 }
 async function getLocalGuildRankings(){
   const store=await readRankedGuildStore();if(!store)return null;
@@ -43,10 +51,10 @@ async function getLocalGuildRankings(){
     defenseTeams:warRecords.filter(r=>rankedGuildIds.has(r.guildId)&&r.kind==='deployed_defense').reduce((n,r)=>n+(r.towers??[]).reduce((m,t)=>m+(t.defenders??[]).reduce((k,d)=>k+d.teams.length,0),0),0)};
 }
 
-export async function getRankedGuild(guildAlias:string):Promise<Awaited<ReturnType<typeof getLocalRankedGuild>>>{
+export async function getRankedGuild(guildAlias:string,client?:SupabaseClient):Promise<Awaited<ReturnType<typeof getLocalRankedGuild>>>{
   if(!/^[a-f0-9]{20}$/.test(guildAlias))return null;
   if(process.env.NODE_ENV!=='production')return getLocalRankedGuild(guildAlias);
-  const data=await readSiteDisplay<Awaited<ReturnType<typeof getLocalRankedGuild>>>(`guild-${guildAlias}`);
+  const data=await readGuildDisplay<Awaited<ReturnType<typeof getLocalRankedGuild>>>(`guild-${guildAlias}`,client);
   if(!data?.war?.overview)return data;
   return {...data,war:{...data.war,overview:{...data.war.overview,ageHours:Math.max(0,Math.floor((Date.now()-Date.parse(data.war.overview.capturedAt))/3600000))}}};
 }

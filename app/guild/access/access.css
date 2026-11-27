@@ -1,0 +1,47 @@
+.guild-access-card {
+  width: 100%;
+  max-width: 34rem;
+}
+
+.guild-access-form,
+.guild-access-form label {
+  display: grid;
+  gap: .7rem;
+}
+
+.guild-access-form {
+  margin-top: 1.2rem;
+}
+
+.guild-access-form input {
+  width: 100%;
+  min-height: 2.85rem;
+  padding: .6rem .75rem;
+  color: inherit;
+  font: inherit;
+  background: #111b22;
+  border: 1px solid #455968;
+  border-radius: .5rem;
+}
+
+.guild-access-form input:focus-visible {
+  outline: 2px solid #76d1c8;
+  outline-offset: 2px;
+}
+
+.guild-access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .55rem;
+}
+
+.guild-access-actions form {
+  margin: 0;
+}
+
+.guild-access-notice {
+  padding: .75rem;
+  background: #263c43;
+  border-radius: .5rem;
+}

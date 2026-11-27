@@ -36,6 +36,8 @@ supabase/.temp/
 private-data/
 personal-data/
 /data/local/
+/data/site-display/guilds.json.gz
+/data/site-display/guild-*.json.gz
 *.private.*
 *.personal.*
 *.secret.*

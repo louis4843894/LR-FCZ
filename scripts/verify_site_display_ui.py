@@ -22,8 +22,6 @@ def main():
     characters = load('characters')
     details = load('character-details')
     sample = next(r for r in characters['records'] if details[r['characterId']]['details'] and details[r['characterId']]['details']['skills'] and details[r['characterId']]['nativeTalents'] and details[r['characterId']]['nativeTalents']['status'] == 'verified-native-group')
-    guilds = load('guilds')
-    guild = next(g for g in guilds['guilds'] if g['defenseState'] == 'success')
     manifest = json.loads((ROOT/'data/site-display/manifest.json').read_text(encoding='utf8'))
     defense_name = next(row['name'] for row in manifest['files'] if row['name'].startswith('defense-') and load(row['name'])['displayPlayers'][0]['teams'][0]['units'])
     defense = load(defense_name)
@@ -44,8 +42,8 @@ def main():
                 ('characters', '/characters?star=9&sort=star-desc', '筆結果'),
                 ('character-detail', '/characters/'+urllib.parse.quote(sample['characterId'])+'#character-skills', sample['name']),
                 ('gear-detail', '/gear/eq_2202_amr_06_nm?level=5', '6 星'),
-                ('guilds', '/guild', '4,751'),
-                ('guild-defense', '/guild/'+guild['alias']+'?tower=1', guild['name']),
+                ('guilds', '/guild', '公會戰權限'),
+                ('guild-defense', '/guild/c0ae8c24042b277ceb3f?tower=1', '公會戰權限'),
                 ('pvp', '/pvp?top=10', '排行榜'),
                 ('pvp-defense', '/pvp/players/'+alias+'?snapshot='+defense['rankingContext']['snapshotId'], 'PVP 防禦隊伍'),
             ]
@@ -63,9 +61,9 @@ def main():
                 }
                 if name == 'character-detail':
                     checks['skillsAndStartup'] = b.evaluate('document.querySelectorAll(".character-skill-card").length>0&&document.querySelector("#character-skills").textContent.includes("前搖")')
-                if name == 'guilds':
-                    checks['real100Guilds'] = b.evaluate('document.querySelectorAll(".guild-ranking-row").length===100')
-                if name in ('guild-defense', 'pvp-defense'):
+                if name in ('guilds', 'guild-defense'):
+                    checks['guildAccessRequired'] = b.evaluate('location.pathname==="/guild/access" && !document.querySelector(".guild-ranking-row, .dv-shell")')
+                if name == 'pvp-defense':
                     checks['actualTeams'] = b.evaluate('document.querySelectorAll(".dv-shell").length>0')
                 b.screenshot(name+'-'+str(width))
                 results.append({'case': name+'-'+str(width), 'checks': checks})

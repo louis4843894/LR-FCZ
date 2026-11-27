@@ -44,7 +44,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
 
 值使用自己的 Supabase 專案 URL 與 Publishable key。`SUPABASE_URL` 僅是同專案網址的可選 server override；`SUPABASE_SECRET_KEY`、`LR_LOCAL_DATABASE_PATH`、`LR_NEXT_DIST_DIR` 不需填入 Vercel，`NODE_ENV` 由平台管理。環境變數變更只影響後續部署，見 [Vercel 官方說明](https://vercel.com/docs/environment-variables/managing-environment-variables)。
 
-**正式圖鑑與防禦改讀顯示資料包**：`data/site-display/` 提供角色、裝備效果、公會名單／已取得防禦及目前接受的 PVP 排名／防禦；圖片來自 `public/site-assets/`。它們隨 Git 建置，不需要本機 SQLite 或 development／loopback 端點，也不需要新增 secret key。上述兩項環境變數保留給原本的公開翻譯查詢。重建及驗證方式見 [正式網站顯示資料](docs/site-display.md)。Supabase 研究草稿維持私有，沒有把完整研究副本公開。
+**正式圖鑑與防禦資料**。角色、裝備及 PVP 使用隨 Git 建置的顯示模型，圖片來自 `public/site-assets/`。公會戰使用 Supabase Auth 與私有顯示模型，需登入並由管理員核准。上述兩項公開環境變數也支援公會帳號，正式站無需 Supabase secret key。重建及發布方式見 [正式網站顯示資料](docs/site-display.md)。
 
 ## 目前功能
 

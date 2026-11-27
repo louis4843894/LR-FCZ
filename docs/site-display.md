@@ -1,6 +1,6 @@
 # 正式網站顯示資料
 
-正式環境不讀取本機研究 SQLite。網站使用 `data/site-display/` 的壓縮顯示模型，以及 `public/site-assets/` 的已驗證 PNG；兩者可隨 Git 一起建置到 Vercel，不需要遊戲登入工作階段或 Supabase secret key。
+正式環境不讀取本機研究 SQLite。公開圖鑑使用 `data/site-display/` 的壓縮顯示模型以及 `public/site-assets/` 的已驗證 PNG，隨 Git 建置。公會排行榜及各公會顯示模型改由 Supabase 私有資料表提供，Vercel 使用既有公開金鑰及使用者工作階段讀取。
 
 ## 從既有有效資料重建
 
@@ -12,6 +12,8 @@ python scripts/validate_site_display.py
 ```
 
 匯出不擷取遊戲、不讀 Cookie、不寫原始資料庫。它使用已驗證的角色／裝備模板、角色詳情、當前公會名單與駐防，以及各段位目前接受的排名／防禦關聯。失敗時不先清空既有網站資料；所有資料、關聯與圖片通過後才更新輸出，manifest 最後更新。
+
+公會壓縮模型仍匯出到本機供驗證。更新這些模型後，在受控環境載入既有同步變數，執行 `python scripts/sync_guild_access_display.py --apply` 發布到私有資料表。省略 `--apply` 時只核對本機匯出，無需連線。公會模型不得提交到公開 Git。
 
 中途中斷可指定該次 `data/research/runtime.private/site-display-<時間>` 目錄作 `--resume`，重用已驗證的顯示片段。若原始有效資料已更新，應開啟新一輪匯出，不混用舊片段。
 
@@ -26,7 +28,7 @@ python scripts/validate_site_display.py
 
 ## 建置與驗證
 
-`next.config.ts` 明確納入 `data/site-display/*.json.gz` 的伺服器檔案追蹤，同時排除研究／原始／本機資料庫及私人標準化檔案。圖片走靜態路徑，不開放原本的本機圖片 API。
+`next.config.ts` 將公開模型納入伺服器檔案追蹤，排除公會模型、研究／原始／本機資料庫及私人標準化檔案。圖片走靜態路徑，不開放原本的本機圖片 API。
 
 ```powershell
 npm.cmd run typecheck

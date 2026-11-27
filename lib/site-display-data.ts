@@ -6,7 +6,7 @@ import { gunzipSync } from "node:zlib";
 // These are explicitly generated display models, never a fallback to private captures.
 const cache = new Map<string, Promise<unknown>>();
 export async function readSiteDisplay<T>(name: string): Promise<T | null> {
-  if (!/^(?:characters|character-details|equipment|gear-icons|guilds|status|pvp-index|pvp-[a-f0-9]{12}|guild-[a-f0-9]{20}|defense-[a-f0-9]{12}-[a-f0-9]{24})$/.test(name)) throw new Error("不支援的網站顯示資料");
+  if (!/^(?:characters|character-details|equipment|gear-icons|status|pvp-index|pvp-[a-f0-9]{12}|defense-[a-f0-9]{12}-[a-f0-9]{24})$/.test(name)) throw new Error("不支援的網站顯示資料");
   let value = cache.get(name);
   if (!value) {
     value = readFile(path.join(process.cwd(), "data/site-display", `${name}.json.gz`)).then(bytes => {

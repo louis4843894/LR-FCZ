@@ -5,9 +5,13 @@ import {SiteFooter} from "../../_components/site-footer";
 import {getRankedGuild} from "../../../lib/guild-rankings";
 import {GuildWarPanel} from "../../_components/guild-war-panel";
 import {guildWarPanelView} from '../../../lib/guild-war';
+import {requireGuildAccess} from "../../../lib/guild-access";
+import {guildDetailPath} from "../../../lib/guild-access-path";
 const time=(s:string)=>new Date(s).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",hour12:false});
 export default async function RankedGuildPage({params,searchParams}:{params:Promise<{guildAlias:string}>;searchParams:Promise<{q?:string;tower?:string}>}){
- const {guildAlias}=await params;const data=await getRankedGuild(guildAlias);if(!data)notFound();const {q="",tower}=await searchParams;
+ const {guildAlias}=await params;const filters=await searchParams;
+ const {client}=await requireGuildAccess(guildDetailPath(guildAlias,filters));
+ const data=await getRankedGuild(guildAlias,client);if(!data)notFound();const {q="",tower}=filters;
  const members=data.roster?.members.filter(m=>m.name.toLocaleLowerCase().includes(q.trim().toLocaleLowerCase()))??[];
  return <div className="page-shell"><SiteHeader/><main className="page-main"><Link className="back-link" href="/guild">← 公會排名</Link>
  <section className="page-intro"><p className="eyebrow">GUILD · 第 {data.guild.rank} 名</p><h1>{data.guild.name}</h1><p className="page-lede">{data.guild.grade} · 公會 Lv.{data.guild.level} · {data.guild.score.toLocaleString("zh-TW")} 分</p></section>

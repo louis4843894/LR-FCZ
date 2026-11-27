@@ -63,6 +63,8 @@ def check():
             findings.append({'path': path, 'rule': 'excluded-local-input'})
         scanned = blob
         if path.startswith('data/site-display/') and path.endswith('.json.gz'):
+            if name == 'guilds.json.gz' or name.startswith('guild-'):
+                findings.append({'path': path, 'rule': 'private-guild-display'})
             from export_site_display import assert_safe
             try:
                 scanned = gzip.decompress(blob)
