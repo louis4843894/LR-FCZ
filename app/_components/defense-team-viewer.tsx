@@ -8,22 +8,29 @@ import {EquipmentReferencePanel} from './equipment-reference-panel';
 import {CollapseControls} from './collapse-controls';
 import './defense-team-viewer.css';
 
-function Stars({count}:{count:number|null}){
-  return count===null?<span className="dv-stars-unknown">星等未知</span>:<span className="dv-stars" aria-label={`${count} 星`} title={`${count} 星`}>{'★'.repeat(count)}</span>;
+function starLabel(count:number|null){
+  return count===null?'星等未知':`${count} 星`;
+}
+
+function StarBadge({count}:{count:number|null}){
+  const label=starLabel(count);
+  return <span className="dv-stars" data-stars={count??'unknown'} role="img" aria-label={label} title={label}>
+    <span aria-hidden="true">{count===null?'☆':'★'}</span>{count??'?'}
+  </span>;
 }
 function Portrait({unit,large=false}:{unit:ViewerUnit;large?:boolean}){
   return <span className={`dv-portrait${large?' dv-portrait-large':''}`}>
     {unit.imageUrl?<Image src={unit.imageUrl} width={172} height={188} alt="" unoptimized loading={large?'eager':'lazy'}/>:<span className="dv-image-missing">{unit.state==='not_present'?'空位':'◇'}</span>}
-    <Stars count={unit.stars}/>
+    <StarBadge count={unit.stars}/>
     <span className="dv-element" data-element={unit.element?.toUpperCase()??'unknown'} title={`${viewerElementName(unit.element)}屬性`} aria-label={`${viewerElementName(unit.element)}屬性`}>{viewerElementName(unit.element)}</span>
     {unit.progress?.talentGrade!=null&&unit.progress.talentGrade>0&&<span className="dv-talent-badge" title={`才能第 ${unit.progress.talentGrade} 階`}>{unit.progress.talentGrade}<span className="dv-sr"> 階才能</span></span>}
   </span>;
 }
 function GearPreview({gear:g}:{gear:ViewerGear}){
-  const label=`${viewerSlotName[g.slot]}：${g.state==='not_equipped'?'確認未穿戴':g.state==='unknown'?'未取得':g.name}${g.state==='equipped'?`，強化${g.enhancement===null?'未知':` +${g.enhancement}`}`:''}`;
-  return <span className="dv-gear-preview" data-state={g.state} title={label} aria-label={label}>
+  const label=`${viewerSlotName[g.slot]}：${g.state==='not_equipped'?'確認未穿戴':g.state==='unknown'?'未取得':g.name}${g.state==='equipped'?`，${starLabel(g.stars)}，強化${g.enhancement===null?'未知':` +${g.enhancement}`}`:''}`;
+  return <span className="dv-gear-preview" data-state={g.state} role="img" title={label} aria-label={label}>
     {g.state==='equipped'&&g.imageUrl?<Image src={g.imageUrl} width={56} height={56} alt="" unoptimized/>:<span className="dv-slot-placeholder">{g.state==='not_equipped'?'空':g.state==='unknown'?'?':viewerSlotName[g.slot]}</span>}
-    {g.state==='equipped'&&<><Stars count={g.stars}/>{g.enhancement!==null&&<small className="dv-enhancement">+{g.enhancement}</small>}</>}
+    {g.state==='equipped'&&<><StarBadge count={g.stars}/>{g.enhancement!==null&&<small className="dv-enhancement">+{g.enhancement}</small>}</>}
   </span>;
 }
 function GearDetail({gear:g}:{gear:ViewerGear}){
@@ -77,7 +84,18 @@ export function DefenseTeamViewer({title,subtitle,teams,combinedLabel='全部已
     <div className="dv-layout"><details className="dv-roster" aria-label="隊伍角色" open><summary className="dv-panel-summary"><h3>隊伍角色</h3></summary>
       {!visible.length&&<p>尚無可用隊伍資料，不代表沒有防禦。</p>}
       {visible.map(t=><details className="dv-team" key={t.key} open><summary className="dv-team-heading"><strong>{t.label} · {t.units.length} 個位置</strong><span>取得於 {viewerTime(t.retrievedAt)}</span></summary>
-        {t.status!=='success'?<p>{t.status==='failed'?'讀取失敗':'資料尚不可取得'}；隊伍內容未知。</p>:!t.units.length?<p>{t.unobservedPositions.length?'未取得角色位置，是否空隊伍尚未確認。':'此次來源確認隊伍為空。'}</p>:<div className="dv-character-grid">{t.units.map(u=><button type="button" className="dv-card" key={u.key} data-unit-key={u.key} aria-pressed={selected?.key===u.key} aria-label={`位置 ${u.position+1}：${u.name}`} onClick={()=>select(u)}><Portrait unit={u}/><span className="dv-card-gear">{u.gear.map(g=><GearPreview gear={g} key={g.slot}/>)}</span><strong className="dv-card-name" title={u.name}>{u.name}</strong><span className="dv-position">位置 {u.position+1}</span></button>)}</div>}
+        {t.status!=='success'?<p>{t.status==='failed'?'讀取失敗':'資料尚不可取得'}；隊伍內容未知。</p>:!t.units.length?<p>{t.unobservedPositions.length?'未取得角色位置，是否空隊伍尚未確認。':'此次來源確認隊伍為空。'}</p>:<div className="dv-character-grid">{t.units.map(u=>{
+          const level=u.progress?.level??null;
+          const levelLabel=level===null?'等級尚未取得':`等級 ${level}`;
+          const label=`位置 ${u.position+1}：${u.name}，${starLabel(u.stars)}${u.state==='not_present'?'':`，${levelLabel}`}`;
+          return <button type="button" className="dv-card" key={u.key} data-unit-key={u.key} aria-pressed={selected?.key===u.key} aria-label={label} onClick={()=>select(u)}>
+            <Portrait unit={u}/>
+            {u.state!=='not_present'&&<span className="dv-card-level" title={levelLabel}>Lv. {level??'?'}</span>}
+            <span className="dv-card-gear">{u.gear.map(g=><GearPreview gear={g} key={g.slot}/>)}</span>
+            <strong className="dv-card-name" title={u.name}>{u.name}</strong>
+            <span className="dv-position">位置 {u.position+1}</span>
+          </button>;
+        })}</div>}
         {t.unobservedPositions.length>0&&<p className="dv-note">未讀取位置：{t.unobservedPositions.map(n=>n+1).join('、')}；未讀取不代表空位置。</p>}<p className="dv-note">{t.note}</p>
       </details>)}
     </details><details className="dv-details" aria-label="角色詳細資料" ref={detail} tabIndex={-1} open><summary className="dv-panel-summary"><h3>角色詳細資料</h3></summary>{selected?<UnitDetail unit={selected} key={selected.key}/>:<div className="dv-detail-empty"><span aria-hidden="true">◇</span><p>點擊左側角色查看等級、雷納德點數、覺醒能力、解放才能與裝備。</p></div>}</details></div>
