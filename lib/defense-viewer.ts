@@ -13,6 +13,7 @@ export type ViewerGear = {
 export type ViewerUnit = {
   key:string;position:number;state:string;characterId:string|null;name:string;
   imageUrl:string|null;stars:number|null;element:string|null;role:string|null;
+  observedLevel?:number;
   progress:CharacterInstanceProgress|null;talents:ReturnType<typeof characterTalentStages>;
   gear:ViewerGear[];
 };
@@ -23,6 +24,7 @@ export type ViewerTeam = {
 export const viewerTeams=(teams:ViewerTeam[],key:string)=>key==='all'?teams:teams.filter(t=>t.key===key);
 export const viewerSelectedUnit=(teams:ViewerTeam[],teamKey:string,unitKey:string|null)=>
   viewerTeams(teams,teamKey).flatMap(t=>t.units).find(u=>u.key===unitKey)??null;
+export const viewerUnitLevel=(unit:ViewerUnit)=>unit.progress?.level??unit.observedLevel??null;
 // Explicit parts avoid Node/Chromium ICU whitespace differences during hydration.
 export function viewerTime(s:string){
   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(s));

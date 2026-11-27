@@ -96,3 +96,11 @@ body{background:var(--canvas);color:var(--ink)}
   flex: 0 0 auto;
   white-space: nowrap;
 }
+
+.guild-attack-formation {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #17232b;
+}

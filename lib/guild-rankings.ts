@@ -3,6 +3,7 @@ import {readSiteDisplay} from './site-display-data';
 import {createHash} from "node:crypto";
 import {readRankedGuildStore,readGuildWarStore} from "./local-game-data";
 import {getGuildWar,type WarRecord} from "./guild-war";
+import {getGuildAttackFormations,type GuildAttackFormation} from './guild-attack-formations';
 import {displaySourceText} from "./display-text";
 
 type Guild={guildId:string;rank:number;score:number;name:string;gradeId:number;gradeLabel:string;memberCount:number;memberCapacity:number;level:number;nationalFlag:string;retrievedAt:string};
@@ -46,16 +47,23 @@ async function getLocalGuildRankings(){
 export async function getRankedGuild(guildAlias:string):Promise<Awaited<ReturnType<typeof getLocalRankedGuild>>>{
   if(!/^[a-f0-9]{20}$/.test(guildAlias))return null;
   if(process.env.NODE_ENV!=='production')return getLocalRankedGuild(guildAlias);
-  const data=await readSiteDisplay<Awaited<ReturnType<typeof getLocalRankedGuild>>>(`guild-${guildAlias}`);
-  if(!data?.war?.overview)return data;
-  return {...data,war:{...data.war,overview:{...data.war.overview,ageHours:Math.max(0,Math.floor((Date.now()-Date.parse(data.war.overview.capturedAt))/3600000))}}};
+  const data=await readSiteDisplay<Omit<NonNullable<Awaited<ReturnType<typeof getLocalRankedGuild>>>, 'attackFormations'>&{attackFormations?: GuildAttackFormation[]}>(`guild-${guildAlias}`);
+  if(!data)return null;
+  const overview=data.war?.overview;
+  const war=data.war&&overview?{...data.war,overview:{...overview,ageHours:Math.max(0,Math.floor((Date.now()-Date.parse(overview.capturedAt))/3600000))}}:data.war;
+  return {...data,war,attackFormations:data.attackFormations??[]};
 }
 async function getLocalRankedGuild(guildAlias:string){
   if(!/^[a-f0-9]{20}$/.test(guildAlias))return null;
   const summary=await getGuildRankings();const guild=summary?.guilds.find(g=>g.alias===guildAlias);if(!guild)return null;
-  const store=await readRankedGuildStore();const roster=(store?.rosters as Roster[]).find(r=>alias(r.guildId)===guildAlias);
-  const war=await getGuildWar(guildAlias,new Map(roster?.members.map(m=>[m.playerId,m.level])));
-  return {guild,rankingCapturedAt:summary!.capturedAt,war,roster:roster?{
+  const store=await readRankedGuildStore();if(!store)return null;
+  const sourceGuild=(store.ranking as Ranking).guilds.find(r=>alias(r.guildId)===guildAlias);if(!sourceGuild)return null;
+  const roster=(store.rosters as Roster[]).find(r=>r.guildId===sourceGuild.guildId);
+  const [war,attackFormations]=await Promise.all([
+    getGuildWar(guildAlias,new Map(roster?.members.map(m=>[m.playerId,m.level]))),
+    getGuildAttackFormations(sourceGuild.guildId),
+  ]);
+  return {guild,rankingCapturedAt:summary!.capturedAt,war,attackFormations,roster:roster?{
     capturedAt:roster.capturedAt,observedTotal:roster.observedMemberTotal,capacity:roster.memberCapacity,
     complete:roster.membershipComplete,members:roster.members.map(m=>({alias:alias(JSON.stringify([roster.guildId,m.playerId])),name:displaySourceText(m.name),role:role(m.role),
       // The native level code still needs its displayed-rank conversion.

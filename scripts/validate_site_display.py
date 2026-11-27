@@ -30,6 +30,7 @@ def main():
         if value.startswith('/site-assets/'):
             assert value in images
     gear = {row['itemCode']: row for row in data['equipment']}
+    gear_codes = {row['dataCode'] for row in data['equipment']}
     characters = {row['characterId']: row for row in data['characters']['records']}
     assert len(gear) == 953 and len(characters) == 2405 and len(data['character-details']) == 2405
     assert gear['eq_2202_amr_06']['starCount'] == 6 and gear['eq_2202_amr_06']['equipType'] == 'ARMOR'
@@ -38,10 +39,27 @@ def main():
     guilds = data['guilds']
     assert len(guilds['guilds']) == 100 and sorted(row['rank'] for row in guilds['guilds']) == list(range(1, 101))
     roster = units = equipped = empty = unknown = enhancements = progress = 0
+    attack_formations = attack_units = attack_equipped = 0
     for guild in guilds['guilds']:
         detail = data['guild-'+guild['alias']]
         assert detail['guild'] == guild
         roster += len(detail['roster']['members']) if detail['roster'] else 0
+        for formation in detail.get('attackFormations', []):
+            attack_formations += 1
+            assert formation['teams'] and len(formation['memberAlias']) == 20
+            for team in formation['teams']:
+                assert team['status'] == 'success' and team['label'].startswith('公會戰進攻 · 隊伍 ')
+                positions = [unit['position'] for unit in team['units']] + team['unobservedPositions']
+                assert sorted(positions) == list(range(20))
+                for unit in team['units']:
+                    attack_units += 1
+                    assert unit['characterId'] is None or unit['characterId'] in characters
+                    assert type(unit['observedLevel']) is int and unit['observedLevel'] >= 1
+                    assert [slot['slot'] for slot in unit['gear']] == ['weapon', 'armor', 'accessory']
+                    for slot in unit['gear']:
+                        assert slot['dataCode'] is None or slot['dataCode'] in gear_codes
+                        assert slot['effects'] is None and slot['special'] is None
+                        attack_equipped += slot['state'] == 'equipped'
         war = detail['war']
         if not war:
             continue
@@ -88,7 +106,8 @@ def main():
             defenses += 1
     report = {'passed': True, 'files': len(data), 'characters': len(characters), 'equipment': len(gear), 'images': len(images), 'guilds': 100,
               'rosterMembers': roster, 'guildRoles': units, 'guildEquipped': equipped, 'guildEmptySlots': empty, 'guildUnknownSlots': unknown,
-              'guildEnhancementKnown': enhancements, 'guildCharacterProgress': progress, 'pvpScopes': len(data['pvp-index']), 'pvpDefenseLinks': defenses}
+              'guildEnhancementKnown': enhancements, 'guildCharacterProgress': progress, 'pvpScopes': len(data['pvp-index']), 'pvpDefenseLinks': defenses,
+              'guildAttackFormations': attack_formations, 'guildAttackRoles': attack_units, 'guildAttackEquipped': attack_equipped}
     (ROOT/'reports/site-display-validation.json').write_text(json.dumps(report, indent=2)+'\n', encoding='utf8')
     print(json.dumps(report))
 

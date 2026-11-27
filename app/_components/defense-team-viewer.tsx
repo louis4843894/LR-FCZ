@@ -3,7 +3,7 @@
 import {useEffect,useId,useRef,useState,type ReactNode} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {type ViewerTeam,type ViewerUnit,type ViewerGear,viewerTeams,viewerSelectedUnit,viewerTime,viewerSlotName,viewerElementName} from '../../lib/defense-viewer';
+import {type ViewerTeam,type ViewerUnit,type ViewerGear,viewerTeams,viewerSelectedUnit,viewerTime,viewerSlotName,viewerElementName,viewerUnitLevel} from '../../lib/defense-viewer';
 import {EquipmentReferencePanel} from './equipment-reference-panel';
 import {CollapseControls} from './collapse-controls';
 import './defense-team-viewer.css';
@@ -48,9 +48,10 @@ function GearDetail({gear:g}:{gear:ViewerGear}){
 }
 function UnitDetail({unit:u}:{unit:ViewerUnit}){
   const p=u.progress;
+  const level=viewerUnitLevel(u);
   return <div className="dv-unit-detail" data-unit-key={u.key}>
     <div className="dv-detail-hero"><Portrait unit={u} large/><div><h3>{u.characterId?<Link href={`/characters/${encodeURIComponent(u.characterId)}`}>{u.name} <span className="dv-link-arrow">↗</span></Link>:u.name}</h3>
-      <p>等級：{p?.level!=null?`Lv. ${p.level}`:'尚未取得'}</p><p>雷納德點數：{p?.leonardPoints!=null?`${p.leonardPoints} 點`:'尚未取得'}</p>
+      <p>等級：{level!==null?`Lv. ${level}`:'尚未取得'}</p><p>雷納德點數：{p?.leonardPoints!=null?`${p.leonardPoints} 點`:'尚未取得'}</p>
       <p className="dv-note">{({STR:'力量型',AGI:'敏捷型',INT:'智慧型'} as Record<string,string>)[u.role??'']??'類型未知'} · {viewerElementName(u.element)}屬性{p?.maxLevel!=null?` · 等級上限 ${p.maxLevel}`:''}</p>
     </div></div>
     <details className="dv-awakening"><summary><span className="dv-awakening-icon" aria-hidden="true">✧</span><span><span className="dv-label">覺醒能力</span><strong>{p?.awakening.state==='present'?p.awakening.name??'能力名稱尚未對照':p?.awakening.state==='empty_observed'?'來源回傳空值':'來源未提供'}</strong></span></summary><p>{p?.awakening.state==='present'?p.awakening.description??'能力敘述尚未對照':p?.awakening.state==='empty_observed'?'來源明確回傳空值，不以模板候選填補。':'來源未提供實際覺醒能力。'}</p></details>
@@ -63,7 +64,7 @@ function UnitDetail({unit:u}:{unit:ViewerUnit}){
   </div>;
 }
 
-export function DefenseTeamViewer({title,subtitle,titleBadge,teams,embedded=false,combinedLabel='全部已取得的防禦隊伍'}:{title:string;subtitle?:string;titleBadge?:ReactNode;teams:ViewerTeam[];embedded?:boolean;combinedLabel?:string}){
+export function DefenseTeamViewer({title,subtitle,titleBadge,teams,embedded=false,kicker='防禦配置',combinedLabel='全部已取得的防禦隊伍'}:{title:string;subtitle?:string;titleBadge?:ReactNode;teams:ViewerTeam[];embedded?:boolean;kicker?:string;combinedLabel?:string}){
   const [teamKey,setTeamKey]=useState('all');const [selectedKey,setSelectedKey]=useState<string|null>(null);const [expanded,setExpanded]=useState(false);
   const dialog=useRef<HTMLDialogElement>(null);const opener=useRef<HTMLButtonElement>(null);const detail=useRef<HTMLDetailsElement>(null);const id=useId();
   const visible=viewerTeams(teams,teamKey);const selected=viewerSelectedUnit(teams,teamKey,selectedKey);
@@ -76,7 +77,7 @@ export function DefenseTeamViewer({title,subtitle,titleBadge,teams,embedded=fals
   const showHeader=!embedded||expanded;
   const expandButton=<button className="dv-expand" type="button" ref={opener} onClick={()=>setExpanded(true)} aria-label="放大檢視" aria-haspopup="dialog">⤢ <span>放大檢視</span></button>;
   const content=<>
-    {showHeader&&<header className="dv-header"><div><p className="dv-kicker">防禦配置</p><h2 className={titleBadge?'dv-title-with-badge':undefined} id={`${id}-title${expanded?'-modal':''}`}>{title}{titleBadge}</h2>{subtitle&&<p className="dv-subtitle">{subtitle}</p>}</div>
+    {showHeader&&<header className="dv-header"><div><p className="dv-kicker">{kicker}</p><h2 className={titleBadge?'dv-title-with-badge':undefined} id={`${id}-title${expanded?'-modal':''}`}>{title}{titleBadge}</h2>{subtitle&&<p className="dv-subtitle">{subtitle}</p>}</div>
       {expanded?<button className="dv-close" type="button" onClick={close} aria-label="關閉隊伍檢視">×</button>:expandButton}
     </header>}
     <div className="dv-controls">
@@ -91,7 +92,7 @@ export function DefenseTeamViewer({title,subtitle,titleBadge,teams,embedded=fals
       {!visible.length&&<p>尚無可用隊伍資料，不代表沒有防禦。</p>}
       {visible.map(t=><details className="dv-team" key={t.key} open><summary className="dv-team-heading"><strong>{t.label} · {t.units.length} 個位置</strong><span>取得於 {viewerTime(t.retrievedAt)}</span></summary>
         {t.status!=='success'?<p>{t.status==='failed'?'讀取失敗':'資料尚不可取得'}；隊伍內容未知。</p>:!t.units.length?<p>{t.unobservedPositions.length?'未取得角色位置，是否空隊伍尚未確認。':'此次來源確認隊伍為空。'}</p>:<div className="dv-character-grid">{t.units.map(u=>{
-          const level=u.progress?.level??null;
+          const level=viewerUnitLevel(u);
           const levelLabel=level===null?'等級尚未取得':`等級 ${level}`;
           const label=`位置 ${u.position+1}：${u.name}，${starLabel(u.stars)}${u.state==='not_present'?'':`，${levelLabel}`}`;
           return <button type="button" className="dv-card" key={u.key} data-unit-key={u.key} aria-pressed={selected?.key===u.key} aria-label={label} onClick={()=>select(u)}>
