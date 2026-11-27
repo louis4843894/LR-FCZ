@@ -92,6 +92,33 @@ body{background:var(--canvas);color:var(--ink)}
   font-size: 13px;
 }
 
+.war-screen-defenders {
+  display: grid;
+  gap: .6rem;
+  padding: 0;
+  list-style: none;
+}
+
+.war-screen-defenders li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .55rem;
+  padding: .72rem .9rem;
+  border: 1px solid var(--line);
+  border-radius: .6rem;
+  background: #192830;
+}
+
+.war-screen-defenders strong {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.war-screen-defenders small {
+  margin-left: auto;
+}
+
 .war-defender > summary > small {
   flex: 0 0 auto;
   white-space: nowrap;

@@ -1,5 +1,7 @@
 import "server-only";
 import {createHash} from "node:crypto";
+import {readFile} from "node:fs/promises";
+import path from "node:path";
 import {readGuildWarStore,readNativeGearRolls,readCharacterInstanceProgress,readCharacterNativeStore} from "./local-game-data";
 import {publicNativeTalents,characterTalentStages} from './character-native';
 import {characterProgressKey,resolveCharacterProgress} from './character-instance-progress';
@@ -17,12 +19,40 @@ type Gear={state:string;equipmentId:string|null;enhancement?:number;instanceGrad
  actualEffects?:{entries:{index:number;attributeId:number;valueGradeRaw:number;attributeTypeRaw:number|null;sourceField?:string}[]}|null};
 type Unit={position:number;characterId:string;characterInstanceId:string;level:number;equipment:Record<string,Gear>};
 type Defender={playerId:string;playerName:string;retrievedAt:string;isAI:boolean;withdrawal:boolean|null;teams:{teamNo:number;units:Unit[]}[]};
+type ScreenObservation = {
+  capturedAt: string;
+  defenders: { memberAlias: string; name: string; playerLevel: { grade: string; level: number }; visibleCharacters: number }[];
+};
+type StoredScreenObservation = {
+  guildAlias: string;
+  seasonNo: number;
+  battleNo: number;
+  towerCode: number;
+  observation: ScreenObservation;
+};
 export type WarRecord={sourceKind:string;kind:string;sourceId:string;guildId:string;seasonNo:number;battleNo:number|null;seasonStatus:string;capturedAt:string;status:string;side?:string;
   towers?:{code:number;countersRaw?:number[];defendersState?:string;readState?:string;defenders:Defender[]|null}[];
   playerId?:string;configuredTeamNo?:number;deploymentState?:string;teams?:{teamNo:number;units:Unit[]}[]};
 const alias=(id:string)=>createHash('sha256').update(id).digest('hex').slice(0,20);
 export const guildGearObservationId=(source:string,tower:number|null,owner:string,team:number,position:number,slot:string)=>
  createHash('sha256').update(JSON.stringify(['guildwar',source,tower,owner,team,position,slot])).digest('hex');
+
+async function readTowerScreenObservations(guildAlias: string, deployment: WarRecord | undefined) {
+  const observations = new Map<number, ScreenObservation>();
+  if (!deployment || process.env.NODE_ENV !== "development") return observations;
+  try {
+    const file = path.join(process.cwd(), "data/local/guild-war-screen-observations.json");
+    const rows: StoredScreenObservation[] = JSON.parse(await readFile(file, "utf8"));
+    for (const row of rows) {
+      if (row.guildAlias === guildAlias && row.seasonNo === deployment.seasonNo && row.battleNo === deployment.battleNo) {
+        observations.set(row.towerCode, row.observation);
+      }
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  return observations;
+}
 
 export async function getGuildWar(guildAlias:string, memberLevels?: ReadonlyMap<string, number>){
  const records=(await readGuildWarStore() as WarRecord[]).filter(r=>alias(r.guildId)===guildAlias);
@@ -40,7 +70,7 @@ export async function getGuildWar(guildAlias:string, memberLevels?: ReadonlyMap<
  const progressKeys:string[]=[];
  for(const r of configured)for(const t of r.teams??[])for(const u of t.units)progressKeys.push(characterProgressKey('guildwar-saved',r.sourceId,r.playerId!,t.teamNo,u.position));
  for(const tower of deployment?.towers??[])for(const d of tower.defenders??[])for(const t of d.teams)for(const u of t.units)progressKeys.push(characterProgressKey('guildwar',deployment!.sourceId,d.playerId,t.teamNo,u.position,tower.code));
- const [rolls,labels,progress]=await Promise.all([readNativeGearRolls(observations,'guildwar'),getNativeGearLabelMap(),readCharacterInstanceProgress(progressKeys)]);
+ const [rolls,labels,progress,screenObservations]=await Promise.all([readNativeGearRolls(observations,'guildwar'),getNativeGearLabelMap(),readCharacterInstanceProgress(progressKeys),readTowerScreenObservations(guildAlias,deployment)]);
  const [characters,gear]=configured.length||deployment?await Promise.all([getCharacterReference(),getVerifiedEquipmentList()]):[null,[]];
  const names=new Map(characters?.records.map(r=>[r.characterId,r])??[]);const equipment=new Map(gear.map(r=>[r.itemCode,r]));
  const allUnits=records.flatMap(r=>[...(r.teams??[]),...(r.towers??[]).flatMap(t=>(t.defenders??[]).flatMap(d=>d.teams))]).flatMap(t=>t.units);
@@ -85,7 +115,8 @@ export async function getGuildWar(guildAlias:string, memberLevels?: ReadonlyMap<
      uniqueHumanDefenders:new Set(allDefenders.filter(d=>!d.isAI).map(d=>d.playerId)).size,
      unitCount:allDefenders.reduce((n,d)=>n+d.teams.reduce((m,t)=>m+t.units.length,0),0),
      equippedCount:allDefenders.reduce((n,d)=>n+d.teams.reduce((m,t)=>m+t.units.reduce((k,u)=>k+Object.values(u.equipment).filter(e=>e.state==='equipped').length,0),0),0),
-     towers:deployment.towers?.map(t=>({code:t.code,number:guildWarTowerNumber(t.code),label:guildWarTowerLabel(t.code),readState:t.readState??'not_read',defenders:t.defenders?.map(d=>({
+     towers:deployment.towers?.map(t=>({code:t.code,number:guildWarTowerNumber(t.code),label:guildWarTowerLabel(t.code),readState:t.readState??'not_read',
+       screenObservation:t.readState==='success'?undefined:screenObservations.get(t.code),defenders:t.defenders?.map(d=>({
        memberAlias:alias(JSON.stringify([deployment.guildId,d.playerId])),name:displaySourceText(d.playerName),retrievedAt:d.retrievedAt,isAI:d.isAI,withdrawal:d.withdrawal,
        playerLevel:d.isAI?null:guildDefenderLevel(memberLevels?.get(d.playerId)),
        teams:displayTeams(d.teams,deployment.sourceId,t.code,d.playerId,d.retrievedAt)}))??null}))??[]}:null,

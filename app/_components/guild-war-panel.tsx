@@ -8,6 +8,7 @@ import {viewerElementName} from '../../lib/defense-viewer';
 import {guildWarTowerElements} from '../../lib/guild-war-towers';
 type War=ReturnType<typeof guildWarPanelView>;
 type Teams=NonNullable<War>['savedConfigurations'][number]['teams'];
+type Tower = NonNullable<NonNullable<War>['deployment']>['towers'][number];
 const time=(s:string)=>new Date(s).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",hour12:false});
 
 function TowerHeading({label,code}:{label:string;code:number}){
@@ -20,19 +21,33 @@ function TowerHeading({label,code}:{label:string;code:number}){
 function WarTeams({teams,scope,retrievedAt,title,subtitle,titleBadge,embedded}:{teams:Teams;scope:string;retrievedAt:string;title:string;subtitle:string;titleBadge?:ReactNode;embedded?:boolean}){
  return <DefenseTeamViewer title={title} subtitle={subtitle} titleBadge={titleBadge} embedded={embedded} teams={warViewerTeams(teams,scope,retrievedAt)} combinedLabel="全部已取得的公會戰隊伍"/>;
 }
+function TowerScreenObservation({ observation }: { observation: NonNullable<Tower['screenObservation']> }) {
+ return <>
+   <p>遊戲畫面核對於 {time(observation.capturedAt)}。角色名稱與裝備明細尚未取得。</p>
+   <ul className="war-screen-defenders" aria-label="畫面確認的駐防者">
+     {observation.defenders.map(defender=><li key={defender.memberAlias} id={`defender-${defender.memberAlias}`}>
+       <strong>{defender.name}</strong>
+       <span className="war-defender-level" data-known="true">{defender.playerLevel.grade} Lv. {defender.playerLevel.level}</span>
+       <small>{defender.visibleCharacters} 個角色位置</small>
+     </li>)}
+   </ul>
+ </>;
+}
+
 export function GuildWarPanel({war,towerCode}:{war:War;towerCode?:string}){
  if(!war)return <section className="reference-panel" id="defense"><h2>公會戰防禦</h2><p>此公會的十座塔配置尚未取得，無法判定哪些成員駐防。一般編隊與 PVP 防禦不列為公會戰防禦。</p></section>;
  const deployment=war.deployment;
  const selected=deployment?.towers.find(t=>t.number!==null&&String(t.number)===towerCode)??deployment?.towers.find(t=>String(t.code)===towerCode)??deployment?.towers[0];
+ const hasScreenObservations=deployment?.towers.some(t=>t.screenObservation);
  return <section className="reference-panel" id="defense" data-collapse-scope><h2>公會戰防禦</h2><CollapseControls/>
- {deployment?<><p>第 {deployment.seasonNo} 期 · 第 {deployment.battleNo} 場 · {deployment.historicalContext?"歷史對手":"防禦"}配置取得於 {time(deployment.capturedAt)}。非即時戰況，配置可能已變更。</p><p className="war-deployment-summary">已讀取 {deployment.towers.filter(t=>t.readState==='success').length}／{deployment.towers.length} 座塔 · {deployment.uniqueHumanDefenders} 位真人駐防 · {deployment.unitCount} 角色 · {deployment.equippedCount.toLocaleString("zh-TW")} 件裝備。</p>
+ {deployment?<><p>第 {deployment.seasonNo} 期 · 第 {deployment.battleNo} 場 · {deployment.historicalContext?"歷史對手":"防禦"}配置取得於 {time(deployment.capturedAt)}。非即時戰況，配置可能已變更。</p><p className="war-deployment-summary">{hasScreenObservations?"已取得詳細配置":"已讀取"} {deployment.towers.filter(t=>t.readState==='success').length}／{deployment.towers.length} 座塔 · {deployment.uniqueHumanDefenders} 位真人駐防 · {deployment.unitCount} 角色 · {deployment.equippedCount.toLocaleString("zh-TW")} 件裝備。</p>
  <nav className="war-tower-grid" aria-label="選擇防禦塔">{deployment.towers.map(t=><Link className="war-tower" aria-current={t.code===selected?.code?'page':undefined} key={t.code} href={`?tower=${t.number??t.code}#defense`}>
    <strong className="war-tower-heading"><TowerHeading label={t.label} code={t.code}/></strong>
-   <span>{t.readState!=='success'?"尚未讀取":t.defenderCount!==null?`${t.defenderCount} 份防禦配置`:"內容未知"}</span>
+   <span>{t.screenObservation?`已核對 ${t.screenObservation.defenders.length} 位駐防`:t.readState!=='success'?"尚未讀取":t.defenderCount!==null?`${t.defenderCount} 份防禦配置`:"內容未知"}</span>
  </Link>)}</nav>
  {selected&&<section className="war-selected-tower">
    <h3 className="war-tower-heading"><TowerHeading label={selected.label} code={selected.code}/></h3>
-   {selected.readState!=='success'?<p>此塔尚未讀取；不能判定為空塔。</p>:selected.defenders===null?<p>駐防內容未知。</p>:selected.defenders.length===0?<p>此次正常回應確認沒有駐防配置。</p>:selected.defenders.map((d,index)=>{
+   {selected.screenObservation?<TowerScreenObservation observation={selected.screenObservation}/>:selected.readState!=='success'?<p>此塔尚未讀取；不能判定為空塔。</p>:selected.defenders===null?<p>駐防內容未知。</p>:selected.defenders.length===0?<p>此次正常回應確認沒有駐防配置。</p>:selected.defenders.map((d,index)=>{
      const name=d.name||'名稱未知';
      const level=d.isAI?null:<span className="war-defender-level" data-known={Boolean(d.playerLevel)} title={d.playerLevel?'公會成員名單記錄的玩家等級':undefined}>
        {d.playerLevel?[d.playerLevel.grade,`Lv. ${d.playerLevel.level}`].filter(Boolean).join(' '):'等級尚未取得'}

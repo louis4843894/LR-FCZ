@@ -61,6 +61,16 @@ def main():
             continue
         for tower in war['deployment']['towers']:
             assert tower['number'] is None or 1 <= tower['number'] <= 10
+            observation = tower.get('screenObservation')
+            if observation is not None:
+                assert tower['readState'] != 'success' and tower['defenders'] is None
+                assert observation['capturedAt'] and observation['defenders']
+                aliases = {member['alias']: member['name'] for member in (detail.get('roster') or {}).get('members', [])}
+                assert len({d['memberAlias'] for d in observation['defenders']}) == len(observation['defenders'])
+                for defender in observation['defenders']:
+                    assert aliases.get(defender['memberAlias']) == defender['name']
+                    assert isinstance(defender['playerLevel']['level'], int) and defender['playerLevel']['level'] > 0
+                    assert isinstance(defender['visibleCharacters'], int) and defender['visibleCharacters'] > 0
             for defender in tower['defenders'] or []:
                 for team in defender['teams']:
                     positions = [unit['position'] for unit in team['units']]

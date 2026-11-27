@@ -37,8 +37,13 @@ def load_guild_models():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--guild", help="Publish only the detail model for this public guild alias")
     args = parser.parse_args()
     models = load_guild_models()
+    if args.guild:
+        models = [row for row in models if row["name"] == "guild-" + args.guild]
+        if not models:
+            parser.error("Guild alias is missing from the validated snapshot")
     if not args.apply:
         print(f"Validated {len(models)} guild display models. No remote changes.")
         return
@@ -60,6 +65,10 @@ def main():
                            payload=models, prefer="resolution=merge-duplicates,return=representation")
     if {row["name"] for row in saved} != {row["name"] for row in models}:
         raise RuntimeError("Upload receipt did not match the guild display export")
+    if args.guild:
+        current = client.request("GET", endpoint, params={"name": "eq." + models[0]["name"], "select": "name,model"})
+        if current != models:
+            raise RuntimeError("Published guild data did not match the validated model")
     print(f"Published {len(saved)} guild display models. Anonymous access denied.")
 
 
