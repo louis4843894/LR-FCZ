@@ -31,14 +31,14 @@ export default async function GuildAccessPage({ searchParams }: {
 }) {
   const { next, mode, notice } = await searchParams;
   const returnPath = guildReturnPath(next);
-  const { status } = await getGuildAccess();
+  const { status, username } = await getGuildAccess();
   const approvedButNotAdmin = status === "approved" && returnPath.startsWith("/guild/review");
   if (status === "admin" || (status === "approved" && !approvedButNotAdmin)) redirect(returnPath);
   const registering = mode === "register";
   const message = typeof notice === "string" && Object.hasOwn(notices, notice) ? notices[notice] : null;
   const state = Object.hasOwn(statusText, status) ? statusText[status as keyof typeof statusText] : null;
 
-  return <div className="page-shell"><SiteHeader/><main className="page-main">
+  return <div className="page-shell"><SiteHeader guildSession={{ status, username }}/><main className="page-main">
     <section className="page-intro"><h1>公會戰權限</h1><p className="page-lede">註冊並通過管理員審核後，即可查看公會排名、十塔防禦與成員名單。</p></section>
     <section className="reference-panel guild-access-card">
       {message && <p className="guild-access-notice" role="status">{message}</p>}

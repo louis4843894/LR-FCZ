@@ -6,7 +6,7 @@ import { guildAccessUrl } from "./lib/guild-access-path";
 export async function proxy(request: NextRequest) {
   const hasSession = request.cookies.getAll().some(({ name }) => /^sb-.*-auth-token(?:\.\d+)?$/.test(name));
   const { pathname } = request.nextUrl;
-  if (!hasSession && pathname !== "/guild/access" && pathname !== "/guild/access/owner") {
+  if (!hasSession && pathname !== "/api/guild-session" && pathname !== "/guild/access" && pathname !== "/guild/access/owner") {
     const destination = request.nextUrl.clone();
     destination.searchParams.delete("_rsc");
     return NextResponse.redirect(new URL(guildAccessUrl(pathname + destination.search), request.url), {
@@ -36,4 +36,4 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ["/guild/:path*"] };
+export const config = { matcher: ["/guild/:path*", "/api/guild-session"] };
