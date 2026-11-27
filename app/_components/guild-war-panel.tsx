@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type {ReactNode} from 'react';
 import type {guildWarPanelView} from "../../lib/guild-war";
 import {CollapseControls} from './collapse-controls';
 import {DefenseTeamViewer} from "./defense-team-viewer";
@@ -16,8 +17,8 @@ function TowerHeading({label,code}:{label:string;code:number}){
   })}</>;
 }
 
-function WarTeams({teams,scope,retrievedAt,title,subtitle}:{teams:Teams;scope:string;retrievedAt:string;title:string;subtitle:string}){
- return <DefenseTeamViewer title={title} subtitle={subtitle} teams={warViewerTeams(teams,scope,retrievedAt)} combinedLabel="全部已取得的公會戰隊伍"/>;
+function WarTeams({teams,scope,retrievedAt,title,subtitle,titleBadge,embedded}:{teams:Teams;scope:string;retrievedAt:string;title:string;subtitle:string;titleBadge?:ReactNode;embedded?:boolean}){
+ return <DefenseTeamViewer title={title} subtitle={subtitle} titleBadge={titleBadge} embedded={embedded} teams={warViewerTeams(teams,scope,retrievedAt)} combinedLabel="全部已取得的公會戰隊伍"/>;
 }
 export function GuildWarPanel({war,towerCode}:{war:War;towerCode?:string}){
  if(!war)return <section className="reference-panel" id="defense"><h2>公會戰防禦</h2><p>此公會的十座塔配置尚未取得，無法判定哪些成員駐防。一般編隊與 PVP 防禦不列為公會戰防禦。</p></section>;
@@ -31,19 +32,23 @@ export function GuildWarPanel({war,towerCode}:{war:War;towerCode?:string}){
  </Link>)}</nav>
  {selected&&<section className="war-selected-tower">
    <h3 className="war-tower-heading"><TowerHeading label={selected.label} code={selected.code}/></h3>
-   {selected.readState!=='success'?<p>此塔尚未讀取；不能判定為空塔。</p>:selected.defenders===null?<p>駐防內容未知。</p>:selected.defenders.length===0?<p>此次正常回應確認沒有駐防配置。</p>:selected.defenders.map((d,index)=><details open={index===0} className="war-defender" id={`defender-${d.memberAlias}`} key={d.memberAlias}>
-     <summary>
-       <h3 className="war-defender-heading">
-         <span className="war-defender-name">{d.name||"名稱未知"}{d.isAI?"（AI 配置）":""}</span>
-         {!d.isAI&&<span className="war-defender-level" data-known={Boolean(d.playerLevel)} title={d.playerLevel?'公會成員名單記錄的玩家等級':undefined}>
-           {d.playerLevel?[d.playerLevel.grade,`Lv. ${d.playerLevel.level}`].filter(Boolean).join(' '):'等級尚未取得'}
-         </span>}
-       </h3>
-       <small>{d.teams.reduce((n,t)=>n+t.units.length,0)} 角色</small>
-     </summary>
-     <p>取得於 {time(d.retrievedAt)}。{d.withdrawal===true?"回應標記此成員已退出；保留當次塔內配置。":""}角色、裝備與部位已解析，尚未逐件目視核對。</p>
-     <WarTeams teams={d.teams} scope={`${selected.code}/${d.memberAlias}`} retrievedAt={d.retrievedAt} title={d.name||"名稱未知"} subtitle={`${selected.label} · ${d.isAI?"AI 配置":"公會戰防禦"}`}/>
-   </details>)}
+   {selected.readState!=='success'?<p>此塔尚未讀取；不能判定為空塔。</p>:selected.defenders===null?<p>駐防內容未知。</p>:selected.defenders.length===0?<p>此次正常回應確認沒有駐防配置。</p>:selected.defenders.map((d,index)=>{
+     const name=d.name||'名稱未知';
+     const level=d.isAI?null:<span className="war-defender-level" data-known={Boolean(d.playerLevel)} title={d.playerLevel?'公會成員名單記錄的玩家等級':undefined}>
+       {d.playerLevel?[d.playerLevel.grade,`Lv. ${d.playerLevel.level}`].filter(Boolean).join(' '):'等級尚未取得'}
+     </span>;
+     return <details open={index===0} className="war-defender" id={`defender-${d.memberAlias}`} key={d.memberAlias}>
+       <summary>
+         <h3 className="war-defender-heading">
+           <span className="war-defender-name">{name}{d.isAI?'（AI 配置）':''}</span>
+           {level}
+         </h3>
+         <small>{d.teams.reduce((n,t)=>n+t.units.length,0)} 角色</small>
+       </summary>
+       {d.withdrawal===true&&<p>回應標記此成員已退出，保留當次塔內配置。</p>}
+       <WarTeams teams={d.teams} scope={`${selected.code}/${d.memberAlias}`} retrievedAt={d.retrievedAt} title={name} titleBadge={level} subtitle={`${selected.label} · ${d.isAI?'AI 配置':'公會戰防禦'}`} embedded/>
+     </details>;
+   })}
  </section>}
  </>:war.overview?<><p>第 {war.overview.seasonNo} 期{war.overview.battleNo!==null?` · 第 ${war.overview.battleNo} 場`:""} · 塔總覽取得於 {time(war.overview.capturedAt)}。{war.overview.ageHours>0?`資料距今 ${war.overview.ageHours} 小時，戰況可能已變更。`:""}</p><p>已取得 {war.overview.towers.length} 座塔的識別；塔內駐防尚未取得，不能判定為空塔。</p><div className="war-tower-grid">{war.overview.towers.map(t=><div className="war-tower" key={t.code}><strong className="war-tower-heading"><TowerHeading label={t.label} code={t.code}/></strong><span>駐防尚未取得</span></div>)}</div></>:null}
  {war.savedConfigurations.map(config=><details className="war-saved-configuration" key={config.alias}><summary>已儲存的個人防禦設定 · {config.teams.reduce((n,t)=>n+t.units.length,0)} 角色（部署未確認）</summary><p>取得於 {time(config.capturedAt)}。這份資料是個人已儲存設定，尚未核對實際駐防塔與成員，不計入已部署隊伍。</p><WarTeams teams={config.teams} scope={config.alias} retrievedAt={config.capturedAt} title="個人儲存的防禦設定" subtitle="部署尚未確認，不計入塔內駐防"/></details>)}

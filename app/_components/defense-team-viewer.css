@@ -104,3 +104,40 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.team-viewer.dv-embedded {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.dv-title-with-badge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.dv-embedded .dv-controls {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  padding: 0 0 8px;
+  margin-bottom: 12px;
+}
+
+.dv-embedded .dv-controls select {
+  min-height: 44px;
+}
+
+.dv-embedded .dv-controls:has(select) .dv-expand {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.dv-embedded .dv-controls:has(select) p {
+  grid-column: 1 / -1;
+}
+
+.dv-embedded .dv-expand span {
+  display: inline;
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect,useId,useRef,useState} from 'react';
+import {useEffect,useId,useRef,useState,type ReactNode} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {type ViewerTeam,type ViewerUnit,type ViewerGear,viewerTeams,viewerSelectedUnit,viewerTime,viewerSlotName,viewerElementName} from '../../lib/defense-viewer';
@@ -63,7 +63,7 @@ function UnitDetail({unit:u}:{unit:ViewerUnit}){
   </div>;
 }
 
-export function DefenseTeamViewer({title,subtitle,teams,combinedLabel='全部已取得的防禦隊伍'}:{title:string;subtitle?:string;teams:ViewerTeam[];combinedLabel?:string}){
+export function DefenseTeamViewer({title,subtitle,titleBadge,teams,embedded=false,combinedLabel='全部已取得的防禦隊伍'}:{title:string;subtitle?:string;titleBadge?:ReactNode;teams:ViewerTeam[];embedded?:boolean;combinedLabel?:string}){
   const [teamKey,setTeamKey]=useState('all');const [selectedKey,setSelectedKey]=useState<string|null>(null);const [expanded,setExpanded]=useState(false);
   const dialog=useRef<HTMLDialogElement>(null);const opener=useRef<HTMLButtonElement>(null);const detail=useRef<HTMLDetailsElement>(null);const id=useId();
   const visible=viewerTeams(teams,teamKey);const selected=viewerSelectedUnit(teams,teamKey,selectedKey);
@@ -73,13 +73,19 @@ export function DefenseTeamViewer({title,subtitle,teams,combinedLabel='全部已
   },[expanded]);
   const close=()=>{setExpanded(false);requestAnimationFrame(()=>opener.current?.focus());};
   const select=(u:ViewerUnit)=>{setSelectedKey(u.key);if(detail.current)detail.current.open=true;if(window.matchMedia('(max-width: 760px)').matches)requestAnimationFrame(()=>detail.current?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}));};
+  const showHeader=!embedded||expanded;
+  const expandButton=<button className="dv-expand" type="button" ref={opener} onClick={()=>setExpanded(true)} aria-label="放大檢視" aria-haspopup="dialog">⤢ <span>放大檢視</span></button>;
   const content=<>
-    <header className="dv-header"><div><p className="dv-kicker">防禦配置</p><h2 id={`${id}-title${expanded?'-modal':''}`}>{title}</h2>{subtitle&&<p className="dv-subtitle">{subtitle}</p>}</div>
-      {expanded?<button className="dv-close" type="button" onClick={close} aria-label="關閉隊伍檢視">×</button>:<button className="dv-expand" type="button" ref={opener} onClick={()=>setExpanded(true)} aria-haspopup="dialog">⤢ <span>放大檢視</span></button>}
-    </header>
-    <div className="dv-controls"><label htmlFor={`${id}-team${expanded?'-modal':''}`}>顯示隊伍</label><select id={`${id}-team${expanded?'-modal':''}`} value={teamKey} onChange={e=>{setTeamKey(e.target.value);setSelectedKey(null);}}>
+    {showHeader&&<header className="dv-header"><div><p className="dv-kicker">防禦配置</p><h2 className={titleBadge?'dv-title-with-badge':undefined} id={`${id}-title${expanded?'-modal':''}`}>{title}{titleBadge}</h2>{subtitle&&<p className="dv-subtitle">{subtitle}</p>}</div>
+      {expanded?<button className="dv-close" type="button" onClick={close} aria-label="關閉隊伍檢視">×</button>:expandButton}
+    </header>}
+    <div className="dv-controls">
+      {(!embedded||teams.length>1)&&<><label htmlFor={`${id}-team${expanded?'-modal':''}`}>顯示隊伍</label><select id={`${id}-team${expanded?'-modal':''}`} value={teamKey} onChange={e=>{setTeamKey(e.target.value);setSelectedKey(null);}}>
       {teams.length>1&&<option value="all">{combinedLabel}</option>}{teams.length===1&&<option value="all">{teams[0].label}</option>}{teams.length!==1&&teams.map(t=><option value={t.key} key={t.key}>{t.label}</option>)}
-    </select><p>{visible.reduce((n,t)=>n+t.units.filter(u=>u.state!=='not_present').length,0)} 個已取得角色位置 · 點擊角色查看裝備</p></div>
+      </select></>}
+      <p>{!embedded&&`${visible.reduce((n,t)=>n+t.units.filter(u=>u.state!=='not_present').length,0)} 個已取得角色位置 · `}點擊角色查看裝備</p>
+      {!showHeader&&expandButton}
+    </div>
     <CollapseControls/>
     <div className="dv-layout"><details className="dv-roster" aria-label="隊伍角色" open><summary className="dv-panel-summary"><h3>隊伍角色</h3></summary>
       {!visible.length&&<p>尚無可用隊伍資料，不代表沒有防禦。</p>}
@@ -100,5 +106,5 @@ export function DefenseTeamViewer({title,subtitle,teams,combinedLabel='全部已
       </details>)}
     </details><details className="dv-details" aria-label="角色詳細資料" ref={detail} tabIndex={-1} open><summary className="dv-panel-summary"><h3>角色詳細資料</h3></summary>{selected?<UnitDetail unit={selected} key={selected.key}/>:<div className="dv-detail-empty"><span aria-hidden="true">◇</span><p>點擊左側角色查看等級、雷納德點數、覺醒能力、解放才能與裝備。</p></div>}</details></div>
   </>;
-  return <div className="dv-shell">{!expanded&&<div className="team-viewer" data-collapse-scope>{content}</div>}<dialog ref={dialog} className="team-viewer dv-dialog" data-collapse-scope aria-labelledby={`${id}-title-modal`} onCancel={e=>{e.preventDefault();close();}} onClick={e=>{if(e.target===e.currentTarget)close();}}>{expanded&&content}</dialog></div>;
+  return <div className="dv-shell">{!expanded&&<div className={`team-viewer${embedded?' dv-embedded':''}`} data-collapse-scope>{content}</div>}<dialog ref={dialog} className="team-viewer dv-dialog" data-collapse-scope aria-labelledby={`${id}-title-modal`} onCancel={e=>{e.preventDefault();close();}} onClick={e=>{if(e.target===e.currentTarget)close();}}>{expanded&&content}</dialog></div>;
 }

@@ -105,7 +105,7 @@ def main():
         verified_values+=1
     checks.update({'everyCharacterProgressBound':bool(binding_ok),'actualStarsPreserved':bool(star_ok),'threeSlotsAndEnhancementBound':bool(slot_ok),'actualTalentGradesBound':bool(talent_ok),'knownEffectsCompared':verified_values>0,'noHorizontalOverflow':b.evaluate('document.documentElement.scrollWidth<=innerWidth && document.querySelector("dialog[open]").scrollWidth<=document.querySelector("dialog[open]").clientWidth')})
     # Team switch must clear the prior selection and must use observed team options.
-    options=b.evaluate('Array.from(document.querySelector("dialog[open] select").options).map(o=>o.value)')
+    options=b.evaluate('Array.from(document.querySelector("dialog[open] select")?.options??[], o=>o.value)')
     if len(options)>1:
      b.evaluate('(()=>{const s=document.querySelector("dialog[open] select");s.value=s.options[1].value;s.dispatchEvent(new Event("change",{bubbles:true}))})()')
      wait_for(b,'!!document.querySelector("dialog[open] .dv-detail-empty")')
