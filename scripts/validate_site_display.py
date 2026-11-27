@@ -71,6 +71,13 @@ def main():
                     assert aliases.get(defender['memberAlias']) == defender['name']
                     assert isinstance(defender['playerLevel']['level'], int) and defender['playerLevel']['level'] > 0
                     assert isinstance(defender['visibleCharacters'], int) and defender['visibleCharacters'] > 0
+                    positions = defender.get('positions')
+                    if positions is not None:
+                        assert [slot['position'] for slot in positions] == list(range(1, defender['visibleCharacters'] + 1))
+                        for slot in positions:
+                            assert slot['element'] in (None, 'FIRE', 'WATER', 'TREE', 'LIGHT', 'DARK')
+                            assert slot['level'] is None or type(slot['level']) is int and slot['level'] > 0
+                            assert isinstance(slot['starting'], bool)
             for defender in tower['defenders'] or []:
                 for team in defender['teams']:
                     positions = [unit['position'] for unit in team['units']]

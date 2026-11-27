@@ -21,7 +21,13 @@ type Unit={position:number;characterId:string;characterInstanceId:string;level:n
 type Defender={playerId:string;playerName:string;retrievedAt:string;isAI:boolean;withdrawal:boolean|null;teams:{teamNo:number;units:Unit[]}[]};
 type ScreenObservation = {
   capturedAt: string;
-  defenders: { memberAlias: string; name: string; playerLevel: { grade: string; level: number }; visibleCharacters: number }[];
+  defenders: {
+    memberAlias: string;
+    name: string;
+    playerLevel: { grade: string; level: number };
+    visibleCharacters: number;
+    positions?: { position: number; element: string | null; level: number | null; starting: boolean }[];
+  }[];
 };
 type StoredScreenObservation = {
   guildAlias: string;

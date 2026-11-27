@@ -23,14 +23,27 @@ function WarTeams({teams,scope,retrievedAt,title,subtitle,titleBadge,embedded}:{
 }
 function TowerScreenObservation({ observation }: { observation: NonNullable<Tower['screenObservation']> }) {
  return <>
-   <p>遊戲畫面核對於 {time(observation.capturedAt)}。角色名稱與裝備明細尚未取得。</p>
-   <ul className="war-screen-defenders" aria-label="畫面確認的駐防者">
-     {observation.defenders.map(defender=><li key={defender.memberAlias} id={`defender-${defender.memberAlias}`}>
-       <strong>{defender.name}</strong>
-       <span className="war-defender-level" data-known="true">{defender.playerLevel.grade} Lv. {defender.playerLevel.level}</span>
-       <small>{defender.visibleCharacters} 個角色位置</small>
-     </li>)}
-   </ul>
+   <p>遊戲畫面核對於 {time(observation.capturedAt)}。展開駐防者可查看位置、屬性和等級。角色名稱與裝備明細尚未取得。</p>
+   {observation.defenders.map(defender=><details className="war-defender" key={defender.memberAlias} id={`defender-${defender.memberAlias}`}>
+     <summary>
+       <h3 className="war-defender-heading">
+         <span className="war-defender-name">{defender.name}</span>
+         <span className="war-defender-level" data-known="true">{defender.playerLevel.grade} Lv. {defender.playerLevel.level}</span>
+       </h3>
+       <small>{defender.visibleCharacters} 個位置</small>
+     </summary>
+     {defender.positions?.length ? <ol className="war-screen-positions" aria-label={`${defender.name} 的角色位置`}>
+       {defender.positions.map(slot=><li key={slot.position}>
+         <span className="war-screen-position-number">位置 {slot.position}</span>
+         {slot.starting && <small className="war-screen-starter">先發</small>}
+         <span className="war-tower-element" data-element={slot.element ?? undefined}
+           title={slot.element ? `${viewerElementName(slot.element)}屬性` : "屬性未確認"}>
+           {slot.element ? viewerElementName(slot.element) : "未確認"}
+         </span>
+         <strong>{slot.level === null ? "等級未確認" : `Lv. ${slot.level}`}</strong>
+       </li>)}
+     </ol> : <p>目前只有駐防者與角色位置總數。</p>}
+   </details>)}
  </>;
 }
 
