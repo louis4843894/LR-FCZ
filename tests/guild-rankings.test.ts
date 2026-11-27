@@ -1,12 +1,10 @@
 import {describe,it,expect,vi,beforeEach} from 'vitest';
 vi.mock('server-only',()=>({}));
-const store=vi.hoisted(()=>({value:null as unknown,war:[] as unknown[],attack:[] as unknown[]}));
-vi.mock('../lib/local-game-data',()=>({readRankedGuildStore:async()=>store.value,readGuildWarStore:async()=>store.war,readGuildAttackFormationStore:async()=>store.attack}));
-vi.mock('../lib/character-reference',()=>({getCharacterReference:async()=>({records:[{characterId:'sample-unit',name:'測試角色',starGrade:9}]})}));
-vi.mock('../lib/verified-equipment',()=>({getVerifiedEquipmentList:async()=>[]}));
+const store=vi.hoisted(()=>({value:null as unknown,war:[] as unknown[]}));
+vi.mock('../lib/local-game-data',()=>({readRankedGuildStore:async()=>store.value,readGuildWarStore:async()=>store.war}));
 import {getGuildRankings,getRankedGuild} from '../lib/guild-rankings';
 
-beforeEach(()=>{store.war=[];store.attack=[];store.value={ranking:{sourceKind:'verified-normal-guildwar-top-ranking',status:'success',snapshotId:'fixture-ranking',capturedAt:'2026-11-25T00:00:00Z',top:100,observedTotal:500,
+beforeEach(()=>{store.war=[];store.value={ranking:{sourceKind:'verified-normal-guildwar-top-ranking',status:'success',snapshotId:'fixture-ranking',capturedAt:'2026-11-25T00:00:00Z',top:100,observedTotal:500,
  guilds:[{guildId:'fixture-private-guild-a',rank:1,score:100,name:'fixture guild A',gradeId:1,gradeLabel:'傳奇',memberCount:1,memberCapacity:50,level:10,nationalFlag:'TW'},{guildId:'fixture-private-guild-b',rank:51,score:50,name:'fixture guild B',gradeId:2,gradeLabel:'大師',memberCount:48,memberCapacity:50,level:10,nationalFlag:'JP'}]},
  rosters:[{guildId:'fixture-private-guild-a',name:'fixture guild A',level:10,capturedAt:'2026-11-25T01:00:00Z',observedMemberTotal:1,memberCapacity:50,membersRetrieved:1,membershipComplete:true,members:[{playerId:'fixture-private-player',name:'fixture member',level:532,role:'MASTER'}]}],attempts:[{guildId:'fixture-private-guild-a',part:'roster',checkedAt:'2026-11-25T02:00:00Z',status:'failed',reason:'fixture_failure'}]};});
 
@@ -32,24 +30,5 @@ describe('ranked guild display boundaries',()=>{
   expect(detail?.roster?.members[0]).toMatchObject({name:'fixture member',level:null,role:'會長',defenseState:'not_read'});
   expect(JSON.stringify(detail)).not.toContain('fixture-private');
   expect(await getRankedGuild('a'.repeat(20))).toBeNull();expect(await getRankedGuild('../invalid')).toBeNull();
- });
- it('shows verified public attack teams without changing defense coverage',async()=>{
-  const raw={guildId:'fixture-private-guild-a',playerId:'fixture-private-player',playerName:'fixture attack member',
-   sourceKind:'verified-public-guildwar-attack-formation',purpose:'guildwar_attack_formation',status:'success',
-   capturedAt:'2026-11-25T03:00:00Z',defenseVerified:false,towerCode:null,teams:[{teamNo:1,units:[{
-    characterId:'sample-unit',position:4,level:240,equipment:{weapon:{state:'unknown',equipmentId:null},
-     armor:{state:'not_equipped',equipmentId:null},accessory:{state:'unknown',equipmentId:null}}}]}]};
-  store.attack=[raw,{...raw,towerCode:11},{...raw,purpose:'pvp_defense'}];
-  const rankings=await getGuildRankings();
-  const detail=await getRankedGuild(rankings!.guilds[0].alias);
-  expect(detail?.attackFormations).toHaveLength(1);
-  const team=detail?.attackFormations[0].teams[0];
-  expect(team?.label).toBe('公會戰進攻 · 隊伍 1');
-  expect(team?.units[0]).toMatchObject({observedLevel:240,position:4,name:'測試角色',stars:9,progress:null});
-  expect(team?.unobservedPositions).not.toContain(4);
-  expect(team?.unobservedPositions).toHaveLength(19);
-  expect(JSON.stringify(detail?.attackFormations)).not.toContain('fixture-private');
-  expect(rankings).toMatchObject({defenseTeams:0,defenseGuilds:0});
-  expect((await getRankedGuild(rankings!.guilds[1].alias))?.attackFormations).toEqual([]);
  });
 });

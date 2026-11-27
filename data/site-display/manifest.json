@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "lr-site-display-manifest",
-  "exportedAt": "2026-11-27T06:24:55.652670+00:00",
+  "exportedAt": "2026-11-27T04:46:24.172232+00:00",
   "counts": {
     "characters": 2405,
     "equipment": 953,
@@ -50,8 +50,8 @@
     },
     {
       "name": "guild-de377e930e519c0b6b88",
-      "sha256": "a4b219037a9e782d4ddb89da70500d7e054eeaf1c1e17874d9d1eb4d6a535865",
-      "bytes": 13963
+      "sha256": "a59fc09917ec9a50d1fdd3e6833540549cb229074b07280bc9106881595ee1d8",
+      "bytes": 1995
     },
     {
       "name": "guild-6b08bbb6f4acde414d8e",

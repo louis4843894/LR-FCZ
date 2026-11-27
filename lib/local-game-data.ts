@@ -179,22 +179,6 @@ export async function readGuildWarStore():Promise<unknown[]>{
   }finally{database.close();}
 }
 
-export async function readGuildAttackFormationStore(guildId: string): Promise<unknown[]> {
-  const database = await localDatabase();
-  if (!database) return [];
-  try {
-    const tables = database.prepare(`SELECT count(*) AS total FROM sqlite_master
-      WHERE type = 'table' AND name IN ('current_guild_public_formations', 'guild_public_formation_sources')`).get();
-    if (Number(tables?.total) !== 2) return [];
-    return database.prepare(`SELECT s.payload FROM current_guild_public_formations c
-      JOIN guild_public_formation_sources s USING (source_id)
-      WHERE c.guild_id = ? AND s.guild_id = c.guild_id AND s.player_id = c.player_id AND s.status = 'success'
-      ORDER BY s.captured_at DESC, s.player_id`).all(guildId).map(row => JSON.parse(String(row.payload)) as unknown);
-  } finally {
-    database.close();
-  }
-}
-
 export async function readCharacterInstanceProgress(keys:readonly string[]):Promise<Map<string,unknown>>{
  const result=new Map<string,unknown>();if(!keys.length)return result;
  const db=await localDatabase();if(!db)return result;
