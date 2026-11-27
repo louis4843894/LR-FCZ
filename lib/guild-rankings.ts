@@ -54,7 +54,7 @@ async function getLocalRankedGuild(guildAlias:string){
   if(!/^[a-f0-9]{20}$/.test(guildAlias))return null;
   const summary=await getGuildRankings();const guild=summary?.guilds.find(g=>g.alias===guildAlias);if(!guild)return null;
   const store=await readRankedGuildStore();const roster=(store?.rosters as Roster[]).find(r=>alias(r.guildId)===guildAlias);
-  const war=await getGuildWar(guildAlias);
+  const war=await getGuildWar(guildAlias,new Map(roster?.members.map(m=>[m.playerId,m.level])));
   return {guild,rankingCapturedAt:summary!.capturedAt,war,roster:roster?{
     capturedAt:roster.capturedAt,observedTotal:roster.observedMemberTotal,capacity:roster.memberCapacity,
     complete:roster.membershipComplete,members:roster.members.map(m=>({alias:alias(JSON.stringify([roster.guildId,m.playerId])),name:displaySourceText(m.name),role:role(m.role),

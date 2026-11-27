@@ -6,6 +6,7 @@ vi.mock('../lib/local-game-data',()=>({readGuildWarStore:async()=>store.records,
 vi.mock('../lib/character-reference',()=>({getCharacterReference:async()=>({records:[{characterId:'fixture-unit',name:'測試角色',starGrade:6}]})}));
 vi.mock('../lib/verified-equipment',()=>({getVerifiedEquipmentList:async()=>[{itemCode:'eq_fixture',dataCode:'eq_fixture_nm',names:{'zh-Hant':'測試防具'},starCount:6,equipType:'ARMOR',reference:{itemCode:'eq_fixture',normalOptions:[{optionKey:'fixture_attack',name:'攻擊力',category:'NORMAL',range:{min:1,max:2,unit:'PERCENT'},upgradeStep:null,attributeId:99}],advanced:null,skillPlus:[],specPlus:null}}]}));
 import {getGuildWar,guildGearObservationId,guildWarPanelView} from '../lib/guild-war';
+import {guildDefenderLevel} from '../lib/guild-defender-level';
 import {warViewerTeams} from '../lib/defense-viewer-data';
 const gid='fixture-private-guild';const alias=createHash('sha256').update(gid).digest('hex').slice(0,20);
 beforeEach(()=>{store.rolls.clear();store.records=[{sourceKind:'verified-guildwar-overview',kind:'overview',guildId:gid,seasonNo:1,battleNo:1,capturedAt:'2026-11-25T00:00:00Z',towers:[{code:11,countersRaw:[0,0],defendersState:'not_read',defenders:null}]},
@@ -35,13 +36,22 @@ describe('guild-war saved configuration display',()=>{
  it('accepts actual fortress deployments independently of saved settings and missing towers',async()=>{
   const saved=store.records[1] as {teams:unknown[]};store.records.push({sourceKind:'verified-guildwar-tower-deployments',kind:'deployed_defense',guildId:gid,seasonNo:1,battleNo:2,capturedAt:'2026-11-26T00:00:00Z',status:'partial',
    towers:[{code:11,readState:'success',defenders:[{playerId:'fixture-private-player',playerName:'測試駐防',isAI:false,withdrawal:false,retrievedAt:'2026-11-26T00:00:00Z',teams:saved.teams}]},{code:12,readState:'not_read',defenders:null},{code:13,readState:'success',defenders:[]}]});
-  const data=await getGuildWar(alias);expect(data?.deployedTeams).toBe(1);expect(data?.deployment).toMatchObject({battleNo:2,uniqueHumanDefenders:1,unitCount:1,equippedCount:1});
+  const data=await getGuildWar(alias,new Map([['fixture-private-player',489]]));expect(data?.deployedTeams).toBe(1);expect(data?.deployment).toMatchObject({battleNo:2,uniqueHumanDefenders:1,unitCount:1,equippedCount:1});
+  expect(data?.deployment?.towers[0].defenders?.[0].playerLevel).toEqual({grade:'L',level:93});
+  expect((await getGuildWar(alias))?.deployment?.towers[0].defenders?.[0].playerLevel).toBeNull();
   expect(data?.deployment?.towers[1].defenders).toBeNull();expect(data?.deployment?.towers[2].defenders).toEqual([]);expect(JSON.stringify(data)).not.toContain('fixture-private');
   const view=guildWarPanelView(data,'3');expect(view?.deployment?.unitCount).toBe(data?.deployment?.unitCount);
   expect(view?.deployment?.towers[0].defenders).toBeNull();expect(view?.deployment?.towers[0].defenderCount).toBe(1);
   expect(view?.deployment?.towers[1].defenderCount).toBeNull();expect(view?.deployment?.towers[2].defenders).toEqual([]);
   expect(data?.deployment?.towers[0].defenders).toHaveLength(1);
   expect(guildWarPanelView(data,'invalid')?.deployment?.towers[0].defenders).toHaveLength(1);
+ });
+ it('preserves the displayed level at the L and S grade boundaries',()=>{
+  expect(guildDefenderLevel(495)).toEqual({grade:'L',level:99});
+  expect(guildDefenderLevel(496)).toEqual({grade:'S',level:1});
+  expect(guildDefenderLevel(500)).toEqual({grade:'S',level:5});
+  expect(guildDefenderLevel(0)).toBeNull();
+  expect(guildDefenderLevel(595)).toBeNull();
  });
  it('binds real values to owner, source, tower, twenty-slot position and actual instance grade',async()=>{
   const key=guildGearObservationId('fixture-source',null,'fixture-private-player',1,19,'armor');

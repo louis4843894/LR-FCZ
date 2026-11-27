@@ -9,6 +9,7 @@ import {displaySourceText} from "./display-text";
 import {equipmentName} from "./equipment-filters";
 import {getLocalGearIconUrl} from "./local-research-assets";
 import {guildWarTowerNumber,guildWarTowerLabel} from "./guild-war-towers";
+import {guildDefenderLevel} from './guild-defender-level';
 import {getNativeGearLabelMap,resolveGearLabel} from "./gear-attribute-labels";
 import {reconstructedEffect,reconstructedSpecial} from "./gear-instance-values";
 
@@ -23,7 +24,7 @@ const alias=(id:string)=>createHash('sha256').update(id).digest('hex').slice(0,2
 export const guildGearObservationId=(source:string,tower:number|null,owner:string,team:number,position:number,slot:string)=>
  createHash('sha256').update(JSON.stringify(['guildwar',source,tower,owner,team,position,slot])).digest('hex');
 
-export async function getGuildWar(guildAlias:string){
+export async function getGuildWar(guildAlias:string, memberLevels?: ReadonlyMap<string, number>){
  const records=(await readGuildWarStore() as WarRecord[]).filter(r=>alias(r.guildId)===guildAlias);
  const overview=records.find(r=>r.sourceKind==='verified-guildwar-overview'&&r.kind==='overview');
  const deployment=records.find(r=>r.sourceKind==='verified-guildwar-tower-deployments'&&r.kind==='deployed_defense');
@@ -86,6 +87,7 @@ export async function getGuildWar(guildAlias:string){
      equippedCount:allDefenders.reduce((n,d)=>n+d.teams.reduce((m,t)=>m+t.units.reduce((k,u)=>k+Object.values(u.equipment).filter(e=>e.state==='equipped').length,0),0),0),
      towers:deployment.towers?.map(t=>({code:t.code,number:guildWarTowerNumber(t.code),label:guildWarTowerLabel(t.code),readState:t.readState??'not_read',defenders:t.defenders?.map(d=>({
        memberAlias:alias(JSON.stringify([deployment.guildId,d.playerId])),name:displaySourceText(d.playerName),retrievedAt:d.retrievedAt,isAI:d.isAI,withdrawal:d.withdrawal,
+       playerLevel:d.isAI?null:guildDefenderLevel(memberLevels?.get(d.playerId)),
        teams:displayTeams(d.teams,deployment.sourceId,t.code,d.playerId,d.retrievedAt)}))??null}))??[]}:null,
    deployedTeams:allDefenders.reduce((n,d)=>n+d.teams.length,0)};
 }
